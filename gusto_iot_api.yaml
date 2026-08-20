@@ -1,0 +1,489 @@
+openapi: 3.0.0
+info:
+  title: gusto_iot_api
+  version: 1.0.0
+paths:
+  /api/v1/project-shows:
+    get:
+      summary: Get All Project Shows
+      operationId: users_eddie_documents_bruno_gusto_iot_show_api_get_all_project_shows_yml
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      servers:
+        - url: http://localhost:5001
+  /api/v1/auth/login:
+    post:
+      summary: Login
+      operationId: users_eddie_documents_bruno_gusto_iot_show_api_auth_login_yml
+      description: ''
+      tags:
+        - auth
+      responses:
+        '200':
+          description: ''
+      requestBody:
+        $ref: '#/components/requestBodies/login'
+      servers:
+        - url: http://localhost:5001
+  /api/v1/users:
+    get:
+      summary: Get All Managers
+      operationId: >-
+        users_eddie_documents_bruno_gusto_iot_show_api_admin_project_manager_get_all_managers_yml
+      description: ''
+      tags:
+        - admin
+      responses:
+        '200':
+          description: ''
+      security:
+        - get_all_managers: []
+      servers:
+        - url: http://localhost:5001
+    post:
+      summary: Create Manager
+      operationId: >-
+        users_eddie_documents_bruno_gusto_iot_show_api_admin_project_manager_create_manager_yml
+      description: ''
+      tags:
+        - admin
+      responses:
+        '200':
+          description: ''
+      requestBody:
+        $ref: '#/components/requestBodies/create_manager'
+      security:
+        - create_manager: []
+      servers:
+        - url: http://localhost:5001
+  /api/v1/users/6a7379dd213415e353e50c89:
+    get:
+      summary: Get Manager Detail
+      operationId: >-
+        users_eddie_documents_bruno_gusto_iot_show_api_admin_project_manager_get_manager_detail_yml
+      description: ''
+      tags:
+        - admin
+      responses:
+        '200':
+          description: ''
+      security:
+        - get_manager_detail: []
+      servers:
+        - url: http://localhost:5001
+    patch:
+      summary: Update Manager
+      operationId: >-
+        users_eddie_documents_bruno_gusto_iot_show_api_admin_project_manager_update_manager_yml
+      description: ''
+      tags:
+        - admin
+      responses:
+        '200':
+          description: ''
+      requestBody:
+        $ref: '#/components/requestBodies/update_manager'
+      security:
+        - update_manager: []
+      servers:
+        - url: http://localhost:5001
+  /api/v1/users/6a73adc571819cdc1ca22770:
+    delete:
+      summary: Delete Manager
+      operationId: >-
+        users_eddie_documents_bruno_gusto_iot_show_api_admin_project_manager_delete_manager_yml
+      description: ''
+      tags:
+        - admin
+      responses:
+        '200':
+          description: ''
+      security:
+        - delete_manager: []
+      servers:
+        - url: http://localhost:5001
+  /api/v1/users/6a73adc571819cdc1ca22770/status:
+    patch:
+      summary: Update Status
+      operationId: >-
+        users_eddie_documents_bruno_gusto_iot_show_api_admin_project_manager_update_status_yml
+      description: ''
+      tags:
+        - admin
+      responses:
+        '200':
+          description: ''
+      requestBody:
+        $ref: '#/components/requestBodies/update_status'
+      security:
+        - update_status: []
+      servers:
+        - url: http://localhost:5001
+  /api/v1/projects:
+    post:
+      summary: Create Project
+      operationId: >-
+        users_eddie_documents_bruno_gusto_iot_show_api_admin_project_create_project_yml
+      description: ''
+      tags:
+        - admin
+      responses:
+        '200':
+          description: ''
+      requestBody:
+        $ref: '#/components/requestBodies/create_project'
+      security:
+        - create_project: []
+      servers:
+        - url: http://localhost:5001
+    get:
+      summary: Get Projects
+      operationId: >-
+        users_eddie_documents_bruno_gusto_iot_show_api_admin_project_get_projects_yml
+      description: ''
+      tags:
+        - admin
+      responses:
+        '200':
+          description: ''
+      security:
+        - get_projects: []
+      servers:
+        - url: http://localhost:5001
+  /api/v1/projects/6a73addb71819cdc1ca22771:
+    get:
+      summary: Get One Project
+      operationId: >-
+        users_eddie_documents_bruno_gusto_iot_show_api_admin_project_get_one_project_yml
+      description: ''
+      tags:
+        - admin
+      responses:
+        '200':
+          description: ''
+      security:
+        - get_one_project: []
+      servers:
+        - url: http://localhost:5001
+    patch:
+      summary: Update Project
+      operationId: >-
+        users_eddie_documents_bruno_gusto_iot_show_api_admin_project_update_project_yml
+      description: ''
+      tags:
+        - admin
+      responses:
+        '200':
+          description: ''
+      requestBody:
+        $ref: '#/components/requestBodies/update_project'
+      security:
+        - update_project: []
+      servers:
+        - url: http://localhost:5001
+  /api/v1/projects/6a73a7699ba03b99fc2277a6:
+    delete:
+      summary: Delete Project
+      operationId: >-
+        users_eddie_documents_bruno_gusto_iot_show_api_admin_project_delete_project_yml
+      description: ''
+      tags:
+        - admin
+      responses:
+        '200':
+          description: ''
+      security:
+        - delete_project: []
+      servers:
+        - url: http://localhost:5001
+  /api/v1/groups:
+    post:
+      summary: Create Group
+      operationId: >-
+        users_eddie_documents_bruno_gusto_iot_show_api_admin_group_create_group_yml
+      description: ''
+      tags:
+        - admin
+      responses:
+        '200':
+          description: ''
+      requestBody:
+        $ref: '#/components/requestBodies/create_group'
+      security:
+        - create_group: []
+      servers:
+        - url: http://localhost:5001
+    get:
+      summary: Get Groups
+      operationId: >-
+        users_eddie_documents_bruno_gusto_iot_show_api_admin_group_get_groups_yml
+      description: ''
+      tags:
+        - admin
+      responses:
+        '200':
+          description: ''
+      security:
+        - get_groups: []
+      servers:
+        - url: http://localhost:5001
+  /api/v1/groups/6a73d0b23fb72f7c93bc967c:
+    delete:
+      summary: Delete Group
+      operationId: >-
+        users_eddie_documents_bruno_gusto_iot_show_api_admin_group_delete_group_yml
+      description: ''
+      tags:
+        - admin
+      responses:
+        '200':
+          description: ''
+      security:
+        - delete_group: []
+      servers:
+        - url: http://localhost:5001
+servers: []
+components:
+  schemas:
+    login:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      example:
+        email: admin@gusto.com
+        password: Admin12345
+    create_manager:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        passwordConfirm:
+          type: string
+      example:
+        fullName: manager2
+        email: manager2@example.com
+        password: password123
+        passwordConfirm: password123
+    update_manager:
+      type: object
+      properties:
+        email:
+          type: string
+      example:
+        email: manager2@example.com
+    update_status:
+      type: object
+      properties:
+        status:
+          type: string
+      example:
+        status: DISABLED
+    create_project:
+      type: object
+      properties:
+        batch:
+          type: string
+        projectStartDate:
+          type: string
+        projectManager:
+          type: string
+      example:
+        batch: HND-60
+        projectStartDate: '2026-11-01'
+        projectManager: 6a73c97573aadccec3414e63
+    update_project:
+      type: object
+      properties:
+        theme:
+          type: string
+        projectShow:
+          type: object
+          properties:
+            startDate:
+              type: string
+            startTime:
+              type: string
+            endTime:
+              type: string
+            location:
+              type: object
+              properties:
+                campus:
+                  type: string
+                floor:
+                  type: string
+                room:
+                  type: string
+            votingCategories:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  description:
+                    type: string
+      example:
+        theme: Smart and Sustainable Campus
+        projectShow:
+          startDate: '2026-12-15'
+          startTime: '09:30'
+          endTime: '16:30'
+          location:
+            campus: 209 Campus
+            floor: Second Floor
+            room: Room 9
+          votingCategories:
+            - name: Most Innovative
+              description: >-
+                Awarded to the group presenting the most original and innovative
+                IoT solution.
+            - name: Best Visual Presentation
+              description: >-
+                Awarded to the group with the clearest and most attractive
+                project presentation.
+            - name: Closest to Real World
+              description: >-
+                Awarded to the project that provides the most practical solution
+                to a real-world problem.
+            - name: Best Technical Implementation
+              description: >-
+                Awarded to the group demonstrating the strongest technical
+                design and implementation.
+    create_group:
+      type: object
+      properties:
+        project:
+          type: object
+          properties:
+            type:
+              type: string
+        groupNumber:
+          type: object
+          properties:
+            type:
+              type: string
+        members:
+          type: object
+          properties:
+            type:
+              type: string
+        title:
+          type: object
+          properties:
+            type:
+              type: string
+        images:
+          type: object
+          properties:
+            type:
+              type: string
+            items:
+              type: object
+              properties:
+                type:
+                  type: string
+  requestBodies:
+    login:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/login'
+      description: ''
+      required: true
+    create_manager:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/create_manager'
+      description: ''
+      required: true
+    update_manager:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/update_manager'
+      description: ''
+      required: true
+    update_status:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/update_status'
+      description: ''
+      required: true
+    create_project:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/create_project'
+      description: ''
+      required: true
+    update_project:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/update_project'
+      description: ''
+      required: true
+    create_group:
+      content:
+        multipart/form-data:
+          schema:
+            $ref: '#/components/schemas/create_group'
+      description: ''
+      required: true
+  securitySchemes:
+    get_all_managers:
+      type: http
+      scheme: bearer
+    create_manager:
+      type: http
+      scheme: bearer
+    get_manager_detail:
+      type: http
+      scheme: bearer
+    update_manager:
+      type: http
+      scheme: bearer
+    delete_manager:
+      type: http
+      scheme: bearer
+    update_status:
+      type: http
+      scheme: bearer
+    create_project:
+      type: http
+      scheme: bearer
+    get_one_project:
+      type: http
+      scheme: bearer
+    update_project:
+      type: http
+      scheme: bearer
+    get_projects:
+      type: http
+      scheme: bearer
+    delete_project:
+      type: http
+      scheme: bearer
+    create_group:
+      type: http
+      scheme: bearer
+    get_groups:
+      type: http
+      scheme: bearer
+    delete_group:
+      type: http
+      scheme: bearer

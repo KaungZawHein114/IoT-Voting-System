@@ -1,0 +1,174 @@
+<%- include('../partials/head') %>
+<% const basePath = panelRole === 'ADMIN' ? '/admin' : '/manager'; const show = project.projectShow || {}; const location = show.location || {}; const votingStateLabels = { NOT_PUBLISHED: 'Not published', UPCOMING: 'Upcoming', VOTING_OPEN: 'Voting open', VOTING_CLOSED: 'Voting closed' }; %>
+<div class="app-shell">
+  <%- include('../partials/sidebar') %>
+  <div class="app-frame">
+    <%- include('../partials/topbar') %>
+    <main class="page">
+      <header class="page-header">
+        <div class="detail-header">
+          <a class="back-link" href="<%= basePath %>/projects"><img src="/icons/arrow-left.svg" alt="Back" /></a>
+          <div><h2><%= project.batch %></h2><p>Managed by <%= project.projectManager?.fullName || 'Unassigned' %> · Started <%= formatDate(project.projectStartDate) %></p></div>
+        </div>
+        <div class="page-actions">
+          <span class="status-badge <%= statusClass(project.status) %>"><%= project.status %></span>
+          <% if (panelRole === 'ADMIN' && project.status === 'DRAFT') { %>
+            <button class="button danger" type="button" data-delete-endpoint="/api/v1/projects/<%= project._id %>" data-confirm="Delete this draft project? Its groups must be deleted first." data-redirect="/admin/projects"><img src="/icons/trash-2.svg" alt="" /> Delete</button>
+          <% } %>
+        </div>
+      </header>
+
+      <div data-tabs>
+        <nav class="tabs" aria-label="Project sections">
+          <button class="tab-button active" type="button" data-tab-target="overview">Overview</button>
+          <button class="tab-button" type="button" data-tab-target="show">Project show</button>
+          <button class="tab-button" type="button" data-tab-target="groups">Groups (<%= groups.length %>)</button>
+          <button class="tab-button" type="button" data-tab-target="voting">Voting</button>
+        </nav>
+      </div>
+
+      <section class="tab-panel" data-tab-panel="overview">
+        <div class="panel">
+          <div class="panel-header"><h3>Project details</h3></div>
+          <form class="panel-body form-grid" data-api-form data-project-form data-project-section="overview" data-endpoint="/api/v1/projects/<%= project._id %>" data-method="PATCH" data-success="Project updated" data-redirect="reload">
+            <% if (panelRole === 'ADMIN') { %>
+              <div class="field"><label for="batch">Batch</label><input id="batch" name="batch" value="<%= project.batch %>" pattern="HND-[0-9]+" required /></div>
+              <div class="field"><label for="projectStartDate">Project start date</label><input id="projectStartDate" name="projectStartDate" type="date" value="<%= dateInputValue(project.projectStartDate) %>" required /></div>
+              <div class="field full"><label for="projectManager">Project manager</label><select id="projectManager" name="projectManager" required><% managers.forEach(manager => { %><option value="<%= manager._id %>" <%= project.projectManager?._id.toString() === manager._id.toString() ? 'selected' : '' %>><%= manager.fullName %></option><% }) %></select><span class="field-hint">Reassignment immediately changes detail and editing access.</span></div>
+            <% } else { %>
+              <div class="field"><label>Batch</label><input value="<%= project.batch %>" readonly /></div>
+              <div class="field"><label>Project start date</label><input value="<%= formatDate(project.projectStartDate) %>" readonly /></div>
+            <% } %>
+            <div class="field full"><label for="theme">Project theme</label><textarea id="theme" name="theme" placeholder="Define the project theme"><%= project.theme || '' %></textarea></div>
+            <div class="form-actions"><button class="button primary" type="submit"><img src="/icons/save.svg" alt="" /> Save overview</button></div>
+          </form>
+        </div>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="show" hidden>
+        <div class="panel">
+          <div class="panel-header"><h3>Show schedule and voting categories</h3></div>
+          <form class="panel-body form-grid" data-api-form data-project-form data-project-section="show" data-endpoint="/api/v1/projects/<%= project._id %>" data-method="PATCH" data-success="Project show updated" data-redirect="reload">
+            <div class="field"><label for="showStartDate">Show date</label><input id="showStartDate" name="showStartDate" type="date" value="<%= dateInputValue(show.startDate) %>" /></div>
+            <div class="field"><label for="showStartTime">Start time</label><input id="showStartTime" name="showStartTime" type="time" value="<%= show.startTime || '' %>" /></div>
+            <div class="field"><label for="showEndTime">End time</label><input id="showEndTime" name="showEndTime" type="time" value="<%= show.endTime || '' %>" /></div>
+            <div class="field"><label for="campus">Campus</label><input id="campus" name="campus" value="<%= location.campus || '' %>" /></div>
+            <div class="field"><label for="floor">Floor</label><input id="floor" name="floor" value="<%= location.floor || '' %>" /></div>
+            <div class="field"><label for="room">Room</label><input id="room" name="room" value="<%= location.room || '' %>" /></div>
+
+            <div class="field full">
+              <div class="page-actions" style="justify-content:space-between"><label>Voting categories</label><button class="button secondary small" type="button" data-add-category><img src="/icons/plus.svg" alt="" /> Add category</button></div>
+              <div class="category-list" id="category-list">
+                <% (show.votingCategories || []).forEach(category => { %>
+                  <div class="category-row">
+                    <input type="hidden" name="categoryId" value="<%= category._id %>" />
+                    <input name="categoryName" value="<%= category.name %>" placeholder="Category name" required />
+                    <input class="category-description" name="categoryDescription" value="<%= category.description %>" placeholder="Short description" required />
+                    <button class="icon-button" type="button" data-remove-category title="Remove category"><img src="/icons/x.svg" alt="Remove category" /></button>
+                  </div>
+                <% }) %>
+              </div>
+              <% if (!(show.votingCategories || []).length) { %><span class="field-hint">No categories yet. Add categories before voting is opened.</span><% } %>
+            </div>
+            <div class="form-actions"><button class="button primary" type="submit"><img src="/icons/save.svg" alt="" /> Save project show</button></div>
+          </form>
+        </div>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="groups" hidden>
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Project groups</h3>
+            <% if (project.status === 'DRAFT') { %><button class="button primary small" type="button" data-open-dialog="create-group-dialog"><img src="/icons/plus.svg" alt="" /> Add group</button><% } %>
+          </div>
+          <% if (groups.length) { %>
+            <div class="table-shell standalone" style="border:0"><table><thead><tr><th>Group</th><th>Title</th><th>Members</th><th>Status</th><th></th></tr></thead><tbody>
+              <% groups.forEach(group => { %><tr><td class="cell-primary">Group <%= group.groupNumber %></td><td><%= group.title %></td><td><%= group.members.length %></td><td><span class="status-badge <%= statusClass(group.status) %>"><%= group.status %></span></td><td><a class="button secondary small" href="<%= basePath %>/groups/<%= group._id %>">Open</a></td></tr><% }) %>
+            </tbody></table></div>
+          <% } else { %><div class="empty-state"><img src="/icons/graduation-cap.svg" alt="" /><div>No groups have been created.</div></div><% } %>
+        </div>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="voting" hidden>
+        <div class="voting-control-grid">
+          <section class="panel">
+            <div class="panel-header"><h3>Voting website</h3><span class="status-badge <%= statusClass(votingControl.state) %>"><%= votingStateLabels[votingControl.state] %></span></div>
+            <div class="panel-body summary-list">
+              <div class="summary-row"><span>Publication</span><strong><%= show.isPublished ? 'Published' : 'Not published' %></strong></div>
+              <div class="summary-row"><span>Control mode</span><strong><%= (show.votingMode || 'SCHEDULED').replaceAll('_', ' ') %></strong></div>
+              <div class="summary-row"><span>Public URL</span><strong class="public-path">/vote/<%= project.batch %></strong></div>
+              <div class="summary-row"><span>Admitted visitors</span><strong><%= votingControl.stats.scannedCount %></strong></div>
+              <div class="summary-row"><span>Votes submitted</span><strong><%= votingControl.stats.votedCount %></strong></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header"><h3>Publishing readiness</h3><span class="status-badge <%= votingControl.readiness.ready ? 'status-active' : 'status-draft' %>"><%= votingControl.readiness.ready ? 'READY' : 'INCOMPLETE' %></span></div>
+            <div class="panel-body">
+              <% if (votingControl.readiness.ready) { %>
+                <div class="notice"><img src="/icons/circle-check.svg" alt="" /><span>Project information, schedule, location, groups, and voting categories are complete.</span></div>
+              <% } else { %>
+                <ul class="readiness-list">
+                  <% votingControl.readiness.missing.forEach(item => { %><li><img src="/icons/circle-x.svg" alt="" /><span><%= item %></span></li><% }) %>
+                </ul>
+              <% } %>
+            </div>
+          </section>
+        </div>
+
+        <section class="panel voting-actions-panel">
+          <div class="panel-header"><h3>Voting controls</h3></div>
+          <div class="panel-body">
+            <div class="control-action-row">
+              <div><strong>Project-show publication</strong><span>Makes this project show eligible for its scheduled voting window.</span></div>
+              <div class="inline-actions">
+                <% if (!show.isPublished) { %>
+                  <form data-api-form data-endpoint="/api/v1/projects/<%= project._id %>/publish" data-method="POST" data-success="Project show published" data-redirect="reload" data-confirm="Publish this project show and enable its voting schedule?"><button class="button primary" type="submit" <%= votingControl.readiness.ready ? '' : 'disabled' %>><img src="/icons/send.svg" alt="" /> Publish project show</button></form>
+                <% } else if (votingControl.state !== 'VOTING_OPEN' && project.status !== 'COMPLETED') { %>
+                  <form data-api-form data-endpoint="/api/v1/projects/<%= project._id %>/unpublish" data-method="POST" data-success="Project show unpublished" data-redirect="reload" data-confirm="Unpublish this project show?"><button class="button secondary" type="submit"><img src="/icons/eye-off.svg" alt="" /> Unpublish</button></form>
+                <% } %>
+              </div>
+            </div>
+
+            <div class="control-action-row">
+              <div><strong>Manual override</strong><span>Overrides the schedule until control is returned to scheduled mode.</span></div>
+              <div class="inline-actions">
+                <% if (show.isPublished && votingControl.readiness.ready && votingControl.state !== 'VOTING_OPEN') { %>
+                  <form data-api-form data-endpoint="/api/v1/projects/<%= project._id %>/voting-mode" data-method="PATCH" data-success="Voting opened" data-redirect="reload" data-confirm="Force voting open outside its current schedule?"><input type="hidden" name="mode" value="FORCED_OPEN" /><button class="button primary" type="submit"><img src="/icons/play.svg" alt="" /> Force open</button></form>
+                <% } %>
+                <% if (votingControl.state === 'VOTING_OPEN') { %>
+                  <form data-api-form data-endpoint="/api/v1/projects/<%= project._id %>/voting-mode" data-method="PATCH" data-success="Voting stopped" data-redirect="reload" data-confirm="Force voting to stop? Every unsubmitted voting session will lose access."><input type="hidden" name="mode" value="FORCED_CLOSED" /><button class="button danger" type="submit"><img src="/icons/square.svg" alt="" /> Force stop</button></form>
+                <% } %>
+                <% if (show.votingMode && show.votingMode !== 'SCHEDULED') { %>
+                  <form data-api-form data-endpoint="/api/v1/projects/<%= project._id %>/voting-mode" data-method="PATCH" data-success="Voting returned to schedule" data-redirect="reload" data-confirm="Return voting control to the configured schedule?"><input type="hidden" name="mode" value="SCHEDULED" /><button class="button secondary" type="submit"><img src="/icons/clock-3.svg" alt="" /> Return to schedule</button></form>
+                <% } %>
+              </div>
+            </div>
+
+            <div class="control-action-row">
+              <div><strong>Live QR display</strong><span>Shows the rotating one-use access QR and live visitor totals.</span></div>
+              <a class="button secondary <%= votingControl.state === 'VOTING_OPEN' ? '' : 'disabled-link' %>" href="<%= votingControl.state === 'VOTING_OPEN' ? `${basePath}/projects/${project._id}/qr-display` : '#' %>"><img src="/icons/qr-code.svg" alt="" /> Open QR display</a>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+</div>
+
+<% if (project.status === 'DRAFT') { %>
+  <dialog id="create-group-dialog">
+    <div class="dialog-header"><h3>Add group to <%= project.batch %></h3><button class="icon-button" type="button" data-close-dialog><img src="/icons/x.svg" alt="Close" /></button></div>
+    <form data-api-form data-group-form data-endpoint="/api/v1/groups" data-method="POST" data-success="Group created" data-redirect="reload" enctype="multipart/form-data">
+      <input type="hidden" name="project" value="<%= project._id %>" />
+      <div class="dialog-body form-grid">
+        <div class="field full"><label>Project title</label><input name="title" required /></div>
+        <div class="field full"><label>Project description</label><textarea name="description" maxlength="1200" placeholder="Explain the problem, solution, and main IoT functions" required></textarea></div>
+        <div class="field full"><label>Members</label><textarea name="members" placeholder="One student name per line" required></textarea></div>
+        <div class="field full"><label>Images</label><input name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple /><span class="field-hint">Up to three images, 5 MB each.</span></div>
+      </div>
+      <div class="dialog-actions"><button class="button secondary" type="button" data-close-dialog>Cancel</button><button class="button primary" type="submit">Create group</button></div>
+    </form>
+  </dialog>
+<% } %>
+<%- include('../partials/footer') %>

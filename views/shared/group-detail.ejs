@@ -1,0 +1,54 @@
+<%- include('../partials/head') %>
+<% const basePath = panelRole === 'ADMIN' ? '/admin' : '/manager'; const editable = project.status === 'DRAFT'; %>
+<div class="app-shell">
+  <%- include('../partials/sidebar') %>
+  <div class="app-frame">
+    <%- include('../partials/topbar') %>
+    <main class="page">
+      <header class="page-header">
+        <div class="detail-header">
+          <a class="back-link" href="<%= basePath %>/groups"><img src="/icons/arrow-left.svg" alt="Back" /></a>
+          <div><h2>Group <%= group.groupNumber %></h2><p><%= project.batch %> · <%= group.title %></p></div>
+        </div>
+        <div class="page-actions">
+          <span class="status-badge <%= statusClass(group.status) %>"><%= group.status %></span>
+          <% if (editable) { %><button class="button danger" type="button" data-delete-endpoint="/api/v1/groups/<%= group._id %>" data-confirm="Delete this group? Later group numbers will be adjusted automatically." data-redirect="<%= basePath %>/groups"><img src="/icons/trash-2.svg" alt="" /> Delete</button><% } %>
+        </div>
+      </header>
+
+      <% if (!editable) { %><div class="notice warning" style="margin-bottom:18px"><img src="/icons/triangle-alert.svg" alt="" /><span>This project is <%= project.status.toLowerCase() %>. Group changes are available only while a project is in draft.</span></div><% } %>
+
+      <section class="content-grid">
+        <div class="panel">
+          <div class="panel-header"><h3>Group details</h3></div>
+          <form class="panel-body form-grid" data-api-form data-group-form data-endpoint="/api/v1/groups/<%= group._id %>" data-method="PATCH" data-success="Group updated" data-redirect="reload" enctype="multipart/form-data">
+            <div class="field"><label>Group number</label><input value="<%= group.groupNumber %>" readonly /></div>
+            <div class="field"><label>Status</label><select name="status" <%= editable ? '' : 'disabled' %>><option value="ACTIVE" <%= group.status === 'ACTIVE' ? 'selected' : '' %>>Active</option><option value="INACTIVE" <%= group.status === 'INACTIVE' ? 'selected' : '' %>>Inactive</option></select></div>
+            <div class="field full"><label>Project title</label><input name="title" value="<%= group.title %>" <%= editable ? 'required' : 'readonly' %> /></div>
+            <div class="field full"><label>Project description</label><textarea name="description" maxlength="1200" <%= editable ? 'required' : 'readonly' %>><%= group.description || '' %></textarea></div>
+            <div class="field full"><label>Members</label><textarea name="members" <%= editable ? 'required' : 'readonly' %>><%= group.members.join('\n') %></textarea></div>
+            <% if (editable) { %><div class="field full"><label>Replace images</label><input name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple /><span class="field-hint">Choosing files replaces all current images. Maximum three.</span></div><div class="form-actions"><button class="button primary" type="submit"><img src="/icons/save.svg" alt="" /> Save group</button></div><% } %>
+          </form>
+        </div>
+
+        <aside class="panel">
+          <div class="panel-header"><h3>Project</h3></div>
+          <div class="panel-body summary-list">
+            <div class="summary-row"><span>Batch</span><strong><%= project.batch %></strong></div>
+            <div class="summary-row"><span>Manager</span><strong><%= project.projectManager?.fullName || 'Unassigned' %></strong></div>
+            <div class="summary-row"><span>Project status</span><strong><span class="status-badge <%= statusClass(project.status) %>"><%= project.status %></span></strong></div>
+            <div class="summary-row"><span>Project start</span><strong><%= formatDate(project.projectStartDate) %></strong></div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="panel" style="margin-top:20px">
+        <div class="panel-header"><h3>Images</h3><span class="cell-secondary"><%= group.images.length %> of 3</span></div>
+        <div class="panel-body">
+          <% if (group.images.length) { %><div class="image-grid"><% group.images.forEach(image => { %><a href="<%= image %>" target="_blank" rel="noreferrer"><img src="<%= image %>" alt="<%= group.title %>" /></a><% }) %></div><% } else { %><div class="empty-state"><img src="/icons/images.svg" alt="" /><div>No images uploaded.</div></div><% } %>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+<%- include('../partials/footer') %>

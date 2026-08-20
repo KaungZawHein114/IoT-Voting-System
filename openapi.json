@@ -1,0 +1,366 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "GUSTO IoT Show Management API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5001/api/v1"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "security": [],
+
+        "summary": "Login",
+
+        "requestBody": {
+          "required": true,
+
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+
+                "properties": {
+                  "email": {
+                    "example": "admin@gusto.com"
+                  },
+
+                  "password": {
+                    "example": "Admin12345"
+                  }
+                }
+              }
+            }
+          }
+        },
+
+        "responses": {
+          "200": {
+            "description": "Login success"
+          }
+        }
+      }
+    },
+
+    "/users": {
+      "get": {
+        "summary": "Get all users",
+
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+
+      "post": {
+        "summary": "Create user",
+
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "fullName": "Manager One",
+
+                "email": "manager@gusto.com",
+
+                "password": "Password123",
+
+                "passwordConfirm": "Password123",
+
+                "role": "MANAGER"
+              }
+            }
+          }
+        },
+
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    },
+
+    "/users/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+
+          "in": "path",
+
+          "required": true,
+
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+
+      "get": {
+        "summary": "Get user"
+      },
+
+      "patch": {
+        "summary": "Update user",
+
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "fullName": "Updated Manager"
+              }
+            }
+          }
+        }
+      },
+
+      "delete": {
+        "summary": "Delete user"
+      }
+    },
+
+    "/project-shows": {
+      "get": {
+        "summary": "Get project shows"
+      },
+
+      "post": {
+        "summary": "Create project show",
+
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "batch": "HND-57",
+
+                "theme": "IoT Exhibition 2026",
+
+                "campus": "Yangon",
+
+                "floor": "3",
+
+                "room": "301",
+
+                "startTime": "09:00",
+
+                "endTime": "17:00"
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/project-shows/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+
+          "in": "path",
+
+          "required": true,
+
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+
+      "get": {
+        "summary": "Get project show"
+      },
+
+      "patch": {
+        "summary": "Update project show"
+      },
+
+      "delete": {
+        "summary": "Delete project show"
+      }
+    },
+
+    "/groups": {
+      "get": {
+        "summary": "Get groups"
+      },
+
+      "post": {
+        "summary": "Create group",
+
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+
+                "properties": {
+                  "title": {
+                    "type": "string",
+
+                    "example": "Smart Home IoT"
+                  },
+
+                  "groupNumber": {
+                    "type": "string",
+
+                    "example": "G01"
+                  },
+
+                  "description": {
+                    "type": "string"
+                  },
+
+                  "members": {
+                    "type": "string",
+
+                    "example": "John,Mary"
+                  },
+
+                  "image": {
+                    "type": "string",
+
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/groups/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+
+          "in": "path",
+
+          "required": true,
+
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+
+      "get": {
+        "summary": "Get group"
+      },
+
+      "patch": {
+        "summary": "Update group"
+      },
+
+      "delete": {
+        "summary": "Delete group"
+      }
+    },
+
+    "/categories": {
+      "get": {
+        "summary": "Get categories"
+      },
+
+      "post": {
+        "summary": "Create category",
+
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "name": "Best Innovation",
+
+                "description": "Innovation award"
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/categories/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+
+          "in": "path",
+
+          "required": true,
+
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+
+      "get": {},
+
+      "patch": {},
+
+      "delete": {}
+    },
+
+    "/votes": {
+      "get": {
+        "summary": "Get votes"
+      },
+
+      "post": {
+        "summary": "Create vote",
+
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "group": "GROUP_ID",
+
+                "category": "CATEGORY_ID",
+
+                "score": 5
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/votes/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+
+          "in": "path",
+
+          "required": true,
+
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+
+      "delete": {}
+    }
+  }
+}

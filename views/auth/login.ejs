@@ -1,0 +1,29 @@
+<%- include('../partials/head', { bodyClass: 'login-page' }) %>
+<section class="login-brand">
+  <div>
+    <img src="/assets/images/gusto-logo.png" alt="GUSTO University" />
+    <h1>IoT Project Show Management</h1>
+    <p>A focused workspace for academic heads and project managers to coordinate project shows.</p>
+  </div>
+  <small>GUSTO University · School of Computing</small>
+</section>
+
+<main class="login-main">
+  <form class="login-form" data-login-form>
+    <h2>Welcome back</h2>
+    <p>Sign in with your university account.</p>
+    <div class="login-message <%= sessionExpired ? 'visible' : '' %>">
+      <%= sessionExpired ? 'Your session has expired. Please sign in again.' : '' %>
+    </div>
+    <div class="field">
+      <label for="email">Email address</label>
+      <input id="email" name="email" type="email" autocomplete="email" required />
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required />
+    </div>
+    <button class="button primary" type="submit">Sign in</button>
+  </form>
+</main>
+<%- include('../partials/footer') %>

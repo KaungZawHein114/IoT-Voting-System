@@ -1,0 +1,77 @@
+<%- include('../partials/head') %>
+<div class="app-shell">
+  <%- include('../partials/sidebar') %>
+  <div class="app-frame">
+    <%- include('../partials/topbar') %>
+    <main class="page">
+      <header class="page-header">
+        <div class="detail-header">
+          <a class="back-link" href="/admin/managers"><img src="/icons/arrow-left.svg" alt="Back" /></a>
+          <div><h2><%= manager.fullName %></h2><p><%= manager.email %> · Joined <%= formatDate(manager.createdAt) %></p></div>
+        </div>
+        <div class="page-actions">
+          <span class="status-badge <%= statusClass(manager.status) %>"><%= manager.status %></span>
+          <button class="button secondary" type="button" data-open-dialog="edit-manager-dialog"><img src="/icons/pencil.svg" alt="" /> Edit</button>
+          <button class="button secondary" type="button" data-open-dialog="password-dialog">Reset password</button>
+          <button class="button <%= manager.status === 'ACTIVE' ? 'danger' : 'primary' %>" type="button" data-open-dialog="status-dialog">
+            <img src="/icons/power.svg" alt="" /> <%= manager.status === 'ACTIVE' ? 'Disable' : 'Enable' %>
+          </button>
+        </div>
+      </header>
+
+      <section class="metric-grid">
+        <article class="metric"><span class="metric-label"><img src="/icons/power.svg" alt="" /> Current projects</span><strong><%= currentProjects.length %></strong></article>
+        <article class="metric"><span class="metric-label"><img src="/icons/list-check.svg" alt="" /> Completed projects</span><strong><%= completedProjects.length %></strong></article>
+      </section>
+
+      <section class="content-grid">
+        <div class="panel">
+          <div class="panel-header"><h3>Current projects</h3></div>
+          <% if (currentProjects.length) { %>
+            <div class="table-shell standalone" style="border:0"><table><thead><tr><th>Batch</th><th>Status</th><th>Start date</th><th></th></tr></thead><tbody>
+              <% currentProjects.forEach(project => { %><tr><td class="cell-primary"><%= project.batch %></td><td><span class="status-badge <%= statusClass(project.status) %>"><%= project.status %></span></td><td><%= formatDate(project.projectStartDate) %></td><td><a class="button secondary small" href="/admin/projects/<%= project._id %>">Open</a></td></tr><% }) %>
+            </tbody></table></div>
+          <% } else { %><div class="empty-state">No current projects.</div><% } %>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h3>Completed projects</h3></div>
+          <% if (completedProjects.length) { %>
+            <div class="panel-body summary-list">
+              <% completedProjects.forEach(project => { %><a class="summary-row" href="/admin/projects/<%= project._id %>"><span><%= project.batch %></span><strong><%= formatDate(project.projectStartDate) %></strong></a><% }) %>
+            </div>
+          <% } else { %><div class="empty-state">No completed projects.</div><% } %>
+        </div>
+      </section>
+
+      <div class="page-actions" style="margin-top:20px">
+        <button class="button danger" type="button" data-delete-endpoint="/api/v1/users/<%= manager._id %>" data-confirm="Delete this manager? Managers with project history cannot be deleted." data-redirect="/admin/managers"><img src="/icons/trash-2.svg" alt="" /> Delete manager</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<dialog id="edit-manager-dialog">
+  <div class="dialog-header"><h3>Edit manager</h3><button class="icon-button" type="button" data-close-dialog><img src="/icons/x.svg" alt="Close" /></button></div>
+  <form data-api-form data-endpoint="/api/v1/users/<%= manager._id %>" data-method="PATCH" data-success="Manager updated" data-redirect="reload">
+    <div class="dialog-body form-grid"><div class="field full"><label>Full name</label><input name="fullName" value="<%= manager.fullName %>" required /></div><div class="field full"><label>Email</label><input name="email" type="email" value="<%= manager.email %>" required /></div></div>
+    <div class="dialog-actions"><button class="button secondary" type="button" data-close-dialog>Cancel</button><button class="button primary" type="submit">Save changes</button></div>
+  </form>
+</dialog>
+
+<dialog id="password-dialog">
+  <div class="dialog-header"><h3>Reset password</h3><button class="icon-button" type="button" data-close-dialog><img src="/icons/x.svg" alt="Close" /></button></div>
+  <form data-api-form data-endpoint="/api/v1/users/<%= manager._id %>/password" data-method="PATCH" data-success="Password reset" data-redirect="reload">
+    <div class="dialog-body form-grid"><div class="notice warning field full">The manager will need to sign in again after this change.</div><div class="field"><label>New password</label><input name="password" type="password" minlength="8" required /></div><div class="field"><label>Confirm password</label><input name="passwordConfirm" type="password" minlength="8" required /></div></div>
+    <div class="dialog-actions"><button class="button secondary" type="button" data-close-dialog>Cancel</button><button class="button primary" type="submit">Reset password</button></div>
+  </form>
+</dialog>
+
+<dialog id="status-dialog">
+  <div class="dialog-header"><h3><%= manager.status === 'ACTIVE' ? 'Disable manager' : 'Enable manager' %></h3><button class="icon-button" type="button" data-close-dialog><img src="/icons/x.svg" alt="Close" /></button></div>
+  <form data-api-form data-endpoint="/api/v1/users/<%= manager._id %>/status" data-method="PATCH" data-success="Status updated" data-redirect="reload">
+    <input type="hidden" name="status" value="<%= manager.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE' %>" />
+    <div class="dialog-body"><div class="notice <%= manager.status === 'ACTIVE' ? 'warning' : '' %>"><img src="/icons/triangle-alert.svg" alt="" /><span><%= manager.status === 'ACTIVE' ? 'Current draft or active projects must be reassigned before this manager can be disabled.' : 'This manager will regain access to the system.' %></span></div></div>
+    <div class="dialog-actions"><button class="button secondary" type="button" data-close-dialog>Cancel</button><button class="button <%= manager.status === 'ACTIVE' ? 'danger' : 'primary' %>" type="submit">Confirm</button></div>
+  </form>
+</dialog>
+<%- include('../partials/footer') %>

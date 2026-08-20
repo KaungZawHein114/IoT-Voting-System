@@ -1,0 +1,53 @@
+<%- include('../partials/head') %>
+<div class="app-shell">
+  <%- include('../partials/sidebar') %>
+  <div class="app-frame">
+    <%- include('../partials/topbar') %>
+    <main class="page">
+      <header class="page-header">
+        <div><h2>Project managers</h2><p>Manage teacher accounts and review their current and completed project load.</p></div>
+        <button class="button primary" type="button" data-open-dialog="create-manager-dialog">
+          <img src="/icons/user-plus.svg" alt="" /> Add manager
+        </button>
+      </header>
+
+      <div class="table-toolbar">
+        <label class="search-field">
+          <img src="/icons/search.svg" alt="" />
+          <input type="search" placeholder="Search managers" data-table-search="managers-table" />
+        </label>
+      </div>
+      <div class="table-shell">
+        <table id="managers-table">
+          <thead><tr><th>Manager</th><th>Status</th><th>Current projects</th><th>Completed</th><th></th></tr></thead>
+          <tbody>
+            <% managers.forEach(manager => { %>
+              <tr data-search-row>
+                <td><span class="cell-primary"><%= manager.fullName %></span><span class="cell-secondary"><%= manager.email %></span></td>
+                <td><span class="status-badge <%= statusClass(manager.status) %>"><%= manager.status %></span></td>
+                <td><%= manager.currentProjectCount %></td>
+                <td><%= manager.completedProjectCount %></td>
+                <td><a class="button secondary small" href="/admin/managers/<%= manager._id %>"><img src="/icons/eye.svg" alt="" /> View</a></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% if (!managers.length) { %><div class="empty-state"><img src="/icons/users.svg" alt="" /><div>No managers found.</div></div><% } %>
+      </div>
+    </main>
+  </div>
+</div>
+
+<dialog id="create-manager-dialog">
+  <div class="dialog-header"><h3>Add project manager</h3><button class="icon-button" type="button" data-close-dialog><img src="/icons/x.svg" alt="Close" /></button></div>
+  <form data-api-form data-endpoint="/api/v1/users" data-method="POST" data-success="Manager created" data-redirect="reload">
+    <div class="dialog-body form-grid">
+      <div class="field full"><label for="manager-name">Full name</label><input id="manager-name" name="fullName" required /></div>
+      <div class="field full"><label for="manager-email">Email</label><input id="manager-email" name="email" type="email" required /></div>
+      <div class="field"><label for="manager-password">Password</label><input id="manager-password" name="password" type="password" minlength="8" required /></div>
+      <div class="field"><label for="manager-confirm">Confirm password</label><input id="manager-confirm" name="passwordConfirm" type="password" minlength="8" required /></div>
+    </div>
+    <div class="dialog-actions"><button class="button secondary" type="button" data-close-dialog>Cancel</button><button class="button primary" type="submit">Create manager</button></div>
+  </form>
+</dialog>
+<%- include('../partials/footer') %>

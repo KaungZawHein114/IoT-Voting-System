@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title><%= pageTitle %> | GUSTO IoT Show</title>
+    <link rel="icon" href="/assets/images/gusto-logo.png" />
+    <link rel="stylesheet" href="/assets/css/qr-display.css" />
+  </head>
+  <body>
+    <main class="qr-display" data-qr-display data-project-id="<%= project._id %>">
+      <section class="qr-information">
+        <div>
+          <a class="display-back" href="<%= basePath %>/projects/<%= project._id %>">
+            <img src="/icons/arrow-left.svg" alt="" /> Back to voting controls
+          </a>
+          <img class="display-logo" src="/assets/images/gusto-logo.png" alt="GUSTO University" />
+          <span class="display-label">IoT Project Show Voting</span>
+          <h1><%= project.batch %></h1>
+          <p><%= project.theme || 'Project show' %></p>
+        </div>
+
+        <section class="display-stats" aria-label="Live voting totals">
+          <article><span>Admitted visitors</span><strong data-scanned-count><%= stats.scannedCount %></strong></article>
+          <article><span>Votes submitted</span><strong data-voted-count><%= stats.votedCount %></strong></article>
+        </section>
+      </section>
+
+      <section class="qr-stage">
+        <div class="qr-status"><span class="live-dot"></span><strong data-qr-state><%= votingState === 'VOTING_OPEN' ? 'Voting open' : 'Voting unavailable' %></strong></div>
+        <div class="qr-frame" data-qr-frame>
+          <img data-qr-image alt="Scan to enter <%= project.batch %> voting" />
+          <div class="qr-loading" data-qr-loading>Preparing secure QR code...</div>
+        </div>
+        <div class="qr-timer" aria-hidden="true"><span data-qr-progress></span></div>
+        <p data-qr-message>Scan the current code to receive one voting session.</p>
+      </section>
+    </main>
+    <script src="/assets/js/qr-display.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,9 @@
+<%- include('../partials/head', { bodyClass: 'error-page' }) %>
+<main class="error-content">
+  <img class="logo" src="/assets/images/gusto-logo.png" alt="GUSTO University" />
+  <span class="error-code">403</span>
+  <h1>Access denied</h1>
+  <p>You can view the project summary, but the full workspace is available only to its assigned manager.</p>
+  <a class="button primary" href="<%= currentUser.role === 'ADMIN' ? '/admin' : '/manager' %>">Return to dashboard</a>
+</main>
+<%- include('../partials/footer') %>

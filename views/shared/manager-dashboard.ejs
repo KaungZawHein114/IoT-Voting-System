@@ -1,0 +1,50 @@
+<%- include('../partials/head') %>
+<div class="app-shell">
+  <%- include('../partials/sidebar') %>
+  <div class="app-frame">
+    <%- include('../partials/topbar') %>
+    <main class="page">
+      <header class="page-header">
+        <div>
+          <h2>Your project workspace</h2>
+          <p>Review university projects and continue work on the projects assigned to you.</p>
+        </div>
+        <a class="button primary" href="/manager/projects">
+          <img src="/icons/folder-kanban.svg" alt="" /> Browse projects
+        </a>
+      </header>
+
+      <% const openCount = assignedProjects.filter(project => ['DRAFT', 'ACTIVE'].includes(project.status)).length; %>
+      <section class="metric-grid">
+        <article class="metric"><span class="metric-label"><img src="/icons/folders.svg" alt="" /> All projects</span><strong><%= allProjectCount %></strong></article>
+        <article class="metric"><span class="metric-label"><img src="/icons/shield-check.svg" alt="" /> Assigned to you</span><strong><%= assignedProjects.length %></strong></article>
+        <article class="metric"><span class="metric-label"><img src="/icons/power.svg" alt="" /> Current work</span><strong><%= openCount %></strong></article>
+        <article class="metric"><span class="metric-label"><img src="/icons/graduation-cap.svg" alt="" /> Your groups</span><strong><%= groupCount %></strong></article>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header"><h3>Assigned projects</h3><a class="button secondary small" href="/manager/groups">View groups</a></div>
+        <% if (assignedProjects.length) { %>
+          <div class="table-shell standalone" style="border:0">
+            <table>
+              <thead><tr><th>Batch</th><th>Status</th><th>Project start</th><th></th></tr></thead>
+              <tbody>
+                <% assignedProjects.forEach(project => { %>
+                  <tr>
+                    <td class="cell-primary"><%= project.batch %></td>
+                    <td><span class="status-badge <%= statusClass(project.status) %>"><%= project.status %></span></td>
+                    <td><%= formatDate(project.projectStartDate) %></td>
+                    <td><a class="button secondary small" href="/manager/projects/<%= project._id %>">Open workspace</a></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="empty-state"><img src="/icons/folders.svg" alt="" /><div>No projects are assigned to you.</div></div>
+        <% } %>
+      </section>
+    </main>
+  </div>
+</div>
+<%- include('../partials/footer') %>

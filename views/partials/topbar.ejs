@@ -1,0 +1,13 @@
+<header class="topbar">
+  <button class="icon-button mobile-menu" type="button" data-sidebar-open title="Open navigation">
+    <img src="/icons/menu.svg" alt="Open navigation" />
+  </button>
+  <div class="topbar-title">
+    <span><%= currentUser.role === 'ADMIN' ? 'Administration' : 'Project workspace' %></span>
+    <h1><%= pageTitle %></h1>
+  </div>
+  <div class="topbar-identity">
+    <span class="status-dot"></span>
+    <span><%= currentUser.fullName %></span>
+  </div>
+</header>

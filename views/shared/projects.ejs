@@ -1,0 +1,66 @@
+<%- include('../partials/head') %>
+<div class="app-shell">
+  <%- include('../partials/sidebar') %>
+  <div class="app-frame">
+    <%- include('../partials/topbar') %>
+    <main class="page">
+      <header class="page-header">
+        <div>
+          <h2>Projects</h2>
+          <p><%= panelRole === 'ADMIN' ? 'Create projects, assign managers, and monitor every batch.' : 'Browse every project. Assigned projects include a full working area.' %></p>
+        </div>
+        <% if (panelRole === 'ADMIN') { %>
+          <button class="button primary" type="button" data-open-dialog="create-project-dialog" <%= managers.length ? '' : 'disabled' %>>
+            <img src="/icons/plus.svg" alt="" /> Create project
+          </button>
+        <% } %>
+      </header>
+
+      <% if (panelRole === 'ADMIN' && !managers.length) { %>
+        <div class="notice warning" style="margin-bottom:18px"><img src="/icons/triangle-alert.svg" alt="" /><span>Create or enable a project manager before creating a project.</span></div>
+      <% } %>
+
+      <div class="table-toolbar">
+        <label class="search-field"><img src="/icons/search.svg" alt="" /><input type="search" placeholder="Search batch or manager" data-table-search="projects-table" /></label>
+      </div>
+      <div class="table-shell">
+        <table id="projects-table">
+          <thead><tr><th>Batch</th><th>Project manager</th><th>Status</th><th>Start date</th><th></th></tr></thead>
+          <tbody>
+            <% projects.forEach(project => { const assigned = project.projectManager && project.projectManager._id.toString() === currentUser._id.toString(); %>
+              <tr data-search-row>
+                <td class="cell-primary"><%= project.batch %></td>
+                <td><%= project.projectManager?.fullName || 'Unassigned' %></td>
+                <td><span class="status-badge <%= statusClass(project.status) %>"><%= project.status %></span></td>
+                <td><%= formatDate(project.projectStartDate) %></td>
+                <td>
+                  <% if (panelRole === 'ADMIN' || assigned) { %>
+                    <a class="button secondary small" href="/<%= panelRole === 'ADMIN' ? 'admin' : 'manager' %>/projects/<%= project._id %>"><img src="/icons/eye.svg" alt="" /> Open</a>
+                  <% } else { %>
+                    <span class="cell-secondary">Summary only</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% if (!projects.length) { %><div class="empty-state"><img src="/icons/folders.svg" alt="" /><div>No projects found.</div></div><% } %>
+      </div>
+    </main>
+  </div>
+</div>
+
+<% if (panelRole === 'ADMIN') { %>
+  <dialog id="create-project-dialog">
+    <div class="dialog-header"><h3>Create project</h3><button class="icon-button" type="button" data-close-dialog><img src="/icons/x.svg" alt="Close" /></button></div>
+    <form data-api-form data-endpoint="/api/v1/projects" data-method="POST" data-success="Project created" data-redirect="reload">
+      <div class="dialog-body form-grid">
+        <div class="field"><label for="project-batch">Batch</label><input id="project-batch" name="batch" placeholder="HND-57" pattern="HND-[0-9]+" required /></div>
+        <div class="field"><label for="project-start">Project start date</label><input id="project-start" name="projectStartDate" type="date" required /></div>
+        <div class="field full"><label for="project-manager">Project manager</label><select id="project-manager" name="projectManager" required><option value="">Select a manager</option><% managers.forEach(manager => { %><option value="<%= manager._id %>"><%= manager.fullName %></option><% }) %></select></div>
+      </div>
+      <div class="dialog-actions"><button class="button secondary" type="button" data-close-dialog>Cancel</button><button class="button primary" type="submit">Create project</button></div>
+    </form>
+  </dialog>
+<% } %>
+<%- include('../partials/footer') %>

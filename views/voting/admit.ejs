@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <title><%= pageTitle %> | GUSTO IoT Show</title>
+    <link rel="icon" href="/assets/images/gusto-logo.png" />
+    <link rel="stylesheet" href="/assets/css/voting.css" />
+  </head>
+  <body class="admission-page">
+    <main class="access-state" data-admission-page data-batch="<%= batch %>">
+      <img src="/assets/images/gusto-logo.png" alt="GUSTO University" />
+      <span class="access-kicker"><%= batch %> Project Show</span>
+      <h1>Checking voting access</h1>
+      <div class="access-loader" aria-hidden="true"></div>
+      <p data-admission-message>Validating the live QR code...</p>
+    </main>
+    <script src="/assets/js/vote-admission.js" defer></script>
+  </body>
+</html>

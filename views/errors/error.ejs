@@ -1,0 +1,9 @@
+<%- include('../partials/head', { bodyClass: 'error-page' }) %>
+<main class="error-content">
+  <img class="logo" src="/assets/images/gusto-logo.png" alt="GUSTO University" />
+  <span class="error-code"><%= statusCode %></span>
+  <h1><%= statusCode === 404 ? 'Page not found' : 'Something went wrong' %></h1>
+  <p><%= message %></p>
+  <a class="button primary" href="/">Return to dashboard</a>
+</main>
+<%- include('../partials/footer') %>

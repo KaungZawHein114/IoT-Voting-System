@@ -1,0 +1,39 @@
+<aside class="sidebar" id="app-sidebar" aria-label="Main navigation">
+  <div class="brand-lockup">
+    <img src="/assets/images/gusto-logo.png" alt="GUSTO University" />
+    <div>
+      <strong>IoT Show</strong>
+      <span><%= currentUser.role === 'ADMIN' ? 'Admin panel' : 'Manager panel' %></span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <% const basePath = currentUser.role === 'ADMIN' ? '/admin' : '/manager'; %>
+    <a class="nav-item <%= activeNav === 'dashboard' ? 'active' : '' %>" href="<%= basePath %>">
+      <img src="/icons/layout-dashboard.svg" alt="" />
+      <span>Dashboard</span>
+    </a>
+    <% if (currentUser.role === 'ADMIN') { %>
+      <a class="nav-item <%= activeNav === 'managers' ? 'active' : '' %>" href="/admin/managers">
+        <img src="/icons/users.svg" alt="" />
+        <span>Managers</span>
+      </a>
+    <% } %>
+    <a class="nav-item <%= activeNav === 'projects' ? 'active' : '' %>" href="<%= basePath %>/projects">
+      <img src="/icons/folder-kanban.svg" alt="" />
+      <span>Projects</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-account">
+    <span class="avatar" aria-hidden="true"><%= currentUser.fullName.charAt(0).toUpperCase() %></span>
+    <div class="account-copy">
+      <strong><%= currentUser.fullName %></strong>
+      <span><%= currentUser.role === 'ADMIN' ? 'Academic Head' : 'Project Manager' %></span>
+    </div>
+    <button class="icon-button" type="button" data-logout title="Sign out">
+      <img src="/icons/log-out.svg" alt="Sign out" />
+    </button>
+  </div>
+</aside>
+<button class="sidebar-backdrop" type="button" data-sidebar-close aria-label="Close navigation"></button>

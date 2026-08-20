@@ -1,0 +1,50 @@
+<%- include('../partials/head') %>
+<% const basePath = panelRole === 'ADMIN' ? '/admin' : '/manager'; %>
+<div class="app-shell">
+  <%- include('../partials/sidebar') %>
+  <div class="app-frame">
+    <%- include('../partials/topbar') %>
+    <main class="page">
+      <header class="page-header">
+        <div><h2>Groups</h2><p><%= panelRole === 'ADMIN' ? 'Review groups across every project and manage groups while projects are in draft.' : 'Manage groups belonging to your assigned projects.' %></p></div>
+        <button class="button primary" type="button" data-open-dialog="create-group-dialog" <%= availableProjects.length ? '' : 'disabled' %>><img src="/icons/plus.svg" alt="" /> Create group</button>
+      </header>
+
+      <% if (!availableProjects.length) { %><div class="notice" style="margin-bottom:18px"><img src="/icons/list-check.svg" alt="" /><span>No editable draft projects are currently available for a new group.</span></div><% } %>
+
+      <div class="table-toolbar"><label class="search-field"><img src="/icons/search.svg" alt="" /><input type="search" placeholder="Search groups or batches" data-table-search="groups-table" /></label></div>
+      <div class="table-shell">
+        <table id="groups-table">
+          <thead><tr><th>Group</th><th>Project</th><th>Title</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <% groups.forEach(group => { %>
+              <tr data-search-row>
+                <td class="cell-primary">Group <%= group.groupNumber %></td>
+                <td><span class="cell-primary"><%= group.project?.batch || 'Missing project' %></span><span class="cell-secondary"><%= group.project?.status || '' %></span></td>
+                <td><%= group.title %></td>
+                <td><span class="status-badge <%= statusClass(group.status) %>"><%= group.status %></span></td>
+                <td><a class="button secondary small" href="<%= basePath %>/groups/<%= group._id %>"><img src="/icons/eye.svg" alt="" /> Open</a></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% if (!groups.length) { %><div class="empty-state"><img src="/icons/graduation-cap.svg" alt="" /><div>No groups found.</div></div><% } %>
+      </div>
+    </main>
+  </div>
+</div>
+
+<dialog id="create-group-dialog">
+  <div class="dialog-header"><h3>Create group</h3><button class="icon-button" type="button" data-close-dialog><img src="/icons/x.svg" alt="Close" /></button></div>
+  <form data-api-form data-group-form data-endpoint="/api/v1/groups" data-method="POST" data-success="Group created" data-redirect="reload" enctype="multipart/form-data">
+    <div class="dialog-body form-grid">
+      <div class="field full"><label>Project</label><select name="project" required><option value="">Select a draft project</option><% availableProjects.forEach(project => { %><option value="<%= project._id %>"><%= project.batch %></option><% }) %></select></div>
+      <div class="field full"><label>Project title</label><input name="title" required /></div>
+      <div class="field full"><label>Project description</label><textarea name="description" maxlength="1200" placeholder="Explain the problem, solution, and main IoT functions" required></textarea></div>
+      <div class="field full"><label>Members</label><textarea name="members" placeholder="One student name per line" required></textarea></div>
+      <div class="field full"><label>Images</label><input name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple /><span class="field-hint">Optional. Up to three images, 5 MB each.</span></div>
+    </div>
+    <div class="dialog-actions"><button class="button secondary" type="button" data-close-dialog>Cancel</button><button class="button primary" type="submit">Create group</button></div>
+  </form>
+</dialog>
+<%- include('../partials/footer') %>

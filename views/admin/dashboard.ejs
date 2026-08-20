@@ -1,0 +1,81 @@
+<%- include('../partials/head') %>
+<div class="app-shell">
+  <%- include('../partials/sidebar') %>
+  <div class="app-frame">
+    <%- include('../partials/topbar') %>
+    <main class="page">
+      <header class="page-header">
+        <div>
+          <h2>Academic overview</h2>
+          <p>Current staffing, project activity, and the latest project assignments.</p>
+        </div>
+        <div class="page-actions">
+          <a class="button secondary" href="/admin/managers">
+            <img src="/icons/users.svg" alt="" /> Managers
+          </a>
+          <a class="button primary" href="/admin/projects">
+            <img src="/icons/folder-kanban.svg" alt="" /> Projects
+          </a>
+        </div>
+      </header>
+
+      <section class="metric-grid" aria-label="Overview statistics">
+        <article class="metric">
+          <span class="metric-label"><img src="/icons/users.svg" alt="" /> Managers</span>
+          <strong><%= managerCount %></strong>
+        </article>
+        <article class="metric">
+          <span class="metric-label"><img src="/icons/list-check.svg" alt="" /> Draft projects</span>
+          <strong><%= statuses.DRAFT || 0 %></strong>
+        </article>
+        <article class="metric">
+          <span class="metric-label"><img src="/icons/power.svg" alt="" /> Active projects</span>
+          <strong><%= statuses.ACTIVE || 0 %></strong>
+        </article>
+        <article class="metric">
+          <span class="metric-label"><img src="/icons/graduation-cap.svg" alt="" /> Groups</span>
+          <strong><%= groupCount %></strong>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Recent projects</h3>
+            <a class="button secondary small" href="/admin/projects">View all</a>
+          </div>
+          <% if (recentProjects.length) { %>
+            <div class="table-shell standalone" style="border:0">
+              <table>
+                <thead><tr><th>Batch</th><th>Manager</th><th>Status</th><th>Start date</th><th></th></tr></thead>
+                <tbody>
+                  <% recentProjects.forEach(project => { %>
+                    <tr>
+                      <td class="cell-primary"><%= project.batch %></td>
+                      <td><%= project.projectManager?.fullName || 'Unassigned' %></td>
+                      <td><span class="status-badge <%= statusClass(project.status) %>"><%= project.status %></span></td>
+                      <td><%= formatDate(project.projectStartDate) %></td>
+                      <td><a class="button secondary small" href="/admin/projects/<%= project._id %>">Open</a></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="empty-state"><img src="/icons/folders.svg" alt="" /><div>No projects yet.</div></div>
+          <% } %>
+        </div>
+
+        <aside class="panel">
+          <div class="panel-header"><h3>Project status</h3></div>
+          <div class="panel-body summary-list">
+            <div class="summary-row"><span>Draft</span><strong><%= statuses.DRAFT || 0 %></strong></div>
+            <div class="summary-row"><span>Active</span><strong><%= statuses.ACTIVE || 0 %></strong></div>
+            <div class="summary-row"><span>Completed</span><strong><%= statuses.COMPLETED || 0 %></strong></div>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+</div>
+<%- include('../partials/footer') %>
