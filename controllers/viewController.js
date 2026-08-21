@@ -6,6 +6,7 @@ const catchAsync = require("../utils/catchAsync");
 const {
   VOTING_STATES,
   getVotingReadiness,
+  getVotingResults,
   getVotingStats,
   resolveVotingState,
 } = require("../services/votingService");
@@ -215,6 +216,36 @@ exports.projectDetail = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.projectResults = catchAsync(async (req, res, next) => {
+  const project = await Project.findById(req.params.id).populate(
+    "projectManager",
+    "fullName",
+  );
+  if (!project) return next(new AppError("No project found with that ID", 404));
+  if (!projectAccessAllowed(project, req.user)) {
+    return renderForbidden(res, req.user, req.path);
+  }
+
+  const votingState = resolveVotingState(project);
+  if (votingState !== VOTING_STATES.VOTING_CLOSED) {
+    return next(new AppError("Results are available after voting closes", 409));
+  }
+
+  const [results, votingStats] = await Promise.all([
+    getVotingResults(project),
+    getVotingStats(project._id),
+  ]);
+
+  res.status(200).render("shared/project-results", {
+    pageTitle: `${project.batch} results`,
+    activeNav: "projects",
+    project,
+    panelRole: req.user.role,
+    results,
+    votingStats,
+  });
+});
+
 exports.groups = catchAsync(async (req, res) => {
   let groupFilter = {};
   let projectFilter = { status: "DRAFT" };
@@ -254,7 +285,8 @@ exports.groupDetail = catchAsync(async (req, res, next) => {
     "projectManager",
     "fullName",
   );
-  if (!project) return next(new AppError("No project found for this group", 404));
+  if (!project)
+    return next(new AppError("No project found for this group", 404));
   if (!projectAccessAllowed(project, req.user)) {
     return renderForbidden(res, req.user, req.path);
   }

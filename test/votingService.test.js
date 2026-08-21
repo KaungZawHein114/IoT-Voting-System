@@ -6,6 +6,7 @@ process.env.JWT_SECRET ||= "voting-service-test-secret";
 const {
   VOTING_MODES,
   VOTING_STATES,
+  buildVotingResults,
   getDesiredProjectStatus,
   getShowSchedule,
   getVotingReadiness,
@@ -59,7 +60,9 @@ test("publishing readiness requires two complete groups and categories", () => {
   assert.equal(ready.ready, true);
   assert.deepEqual(ready.missing, []);
 
-  const incomplete = getVotingReadiness(completeProject(), [completeGroups()[0]]);
+  const incomplete = getVotingReadiness(completeProject(), [
+    completeGroups()[0],
+  ]);
   assert.equal(incomplete.ready, false);
   assert.ok(incomplete.missing.includes("At least 2 active groups"));
 
@@ -84,7 +87,9 @@ test("publishing readiness rejects an invalid schedule and duplicate categories"
 
   const readiness = getVotingReadiness(project, completeGroups());
   assert.equal(readiness.ready, false);
-  assert.ok(readiness.missing.includes("End time must be later than start time"));
+  assert.ok(
+    readiness.missing.includes("End time must be later than start time"),
+  );
   assert.ok(readiness.missing.includes("Voting category names must be unique"));
 });
 
@@ -138,4 +143,27 @@ test("session and CSRF tokens are random, hashed, and bound together", () => {
   const csrf = createCsrfToken(first);
   assert.equal(validCsrfToken(first, csrf), true);
   assert.equal(validCsrfToken(second, csrf), false);
+});
+
+test("voting results include zero-vote groups for every category", () => {
+  const project = {
+    projectShow: {
+      votingCategories: [
+        { _id: "category-1", name: "Innovation", description: "Originality" },
+      ],
+    },
+  };
+  const groups = [
+    { _id: "group-1", groupNumber: 1, title: "One", status: "ACTIVE" },
+    { _id: "group-2", groupNumber: 2, title: "Two", status: "ACTIVE" },
+  ];
+
+  const [category] = buildVotingResults(project, groups, [
+    { _id: { categoryId: "category-1", groupId: "group-1" }, count: 3 },
+  ]);
+
+  assert.deepEqual(
+    category.groups.map((group) => group.voteCount),
+    [3, 0],
+  );
 });

@@ -193,6 +193,54 @@ const getVotingStats = async (projectId) => {
   };
 };
 
+const buildVotingResults = (project, groups, selectionCounts) => {
+  const counts = new Map(
+    selectionCounts.map((item) => [
+      `${item._id.categoryId}:${item._id.groupId}`,
+      item.count,
+    ]),
+  );
+
+  return (project.projectShow?.votingCategories || []).map((category) => ({
+    id: category._id.toString(),
+    name: category.name,
+    description: category.description,
+    groups: groups.map((group) => ({
+      id: group._id.toString(),
+      groupNumber: group.groupNumber,
+      title: group.title,
+      status: group.status,
+      voteCount: counts.get(`${category._id}:${group._id.toString()}`) || 0,
+    })),
+  }));
+};
+
+const getVotingResults = async (project) => {
+  const [groups, selectionCounts] = await Promise.all([
+    Group.find({ project: project._id })
+      .select("groupNumber title status")
+      .sort({ groupNumber: 1 }),
+    Vote.aggregate([
+      { $match: { project: project._id } },
+      { $unwind: "$selections" },
+      {
+        $group: {
+          _id: {
+            categoryId: "$selections.votingCategory",
+            groupId: "$selections.group",
+          },
+          count: { $sum: 1 },
+        },
+      },
+    ]),
+  ]);
+
+  return {
+    categories: buildVotingResults(project, groups, selectionCounts),
+    groups,
+  };
+};
+
 const syncAllPublishedProjects = async () => {
   const projects = await Project.find({ "projectShow.isPublished": true });
   await Promise.all(projects.map((project) => syncProjectStatus(project)));
@@ -202,10 +250,12 @@ module.exports = {
   TIMEZONE_OFFSET,
   VOTING_MODES,
   VOTING_STATES,
+  buildVotingResults,
   getDesiredProjectStatus,
   getProjectVotingContext,
   getShowSchedule,
   getVotingReadiness,
+  getVotingResults,
   getVotingStats,
   invalidateProjectPublication,
   resolveVotingState,

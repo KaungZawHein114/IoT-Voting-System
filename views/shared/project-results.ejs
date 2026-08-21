@@ -1,0 +1,41 @@
+<%- include('../partials/head') %>
+<% const basePath = panelRole === 'ADMIN' ? '/admin' : '/manager'; %>
+<div class="app-shell">
+  <%- include('../partials/sidebar') %>
+  <div class="app-frame">
+    <%- include('../partials/topbar') %>
+    <main class="page">
+      <header class="page-header">
+        <div class="detail-header">
+          <a class="back-link" href="<%= basePath %>/projects/<%= project._id %>"><img src="/icons/arrow-left.svg" alt="Back" /></a>
+          <div><h2><%= project.batch %> results</h2><p>Voting results for <%= project.theme || 'this project show' %></p></div>
+        </div>
+        <span class="status-badge status-voting_closed">Voting closed</span>
+      </header>
+
+      <div class="metric-grid">
+        <div class="metric"><span class="metric-label"><img src="/icons/check-circle-2.svg" alt="" /> Votes submitted</span><strong><%= votingStats.votedCount %></strong></div>
+        <div class="metric"><span class="metric-label"><img src="/icons/layers-2.svg" alt="" /> Categories</span><strong><%= results.categories.length %></strong></div>
+        <div class="metric"><span class="metric-label"><img src="/icons/users.svg" alt="" /> Groups</span><strong><%= results.groups.length %></strong></div>
+      </div>
+
+      <% if (results.categories.length) { %>
+        <div class="results-list">
+          <% results.categories.forEach(category => { %>
+            <section class="panel">
+              <div class="panel-header"><div><h3><%= category.name %></h3><span class="cell-secondary"><%= category.description %></span></div></div>
+              <div class="table-shell standalone" style="border:0"><table><thead><tr><th>Group</th><th>Project title</th><th>Votes</th></tr></thead><tbody>
+                <% category.groups.forEach(group => { %>
+                  <tr><td class="cell-primary">Group <%= group.groupNumber %></td><td><%= group.title %></td><td class="cell-primary"><%= group.voteCount %></td></tr>
+                <% }) %>
+              </tbody></table></div>
+            </section>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="panel"><div class="empty-state"><img src="/icons/bar-chart-3.svg" alt="" /><div>No voting categories were configured.</div></div></div>
+      <% } %>
+    </main>
+  </div>
+</div>
+<%- include('../partials/footer') %>

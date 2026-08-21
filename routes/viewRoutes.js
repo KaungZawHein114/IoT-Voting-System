@@ -37,6 +37,11 @@ router.get(
   votingController.renderQrDisplay,
 );
 router.get(
+  "/admin/projects/:id/results",
+  viewAuth.restrictTo("ADMIN"),
+  viewController.projectResults,
+);
+router.get(
   "/admin/projects/:id",
   viewAuth.restrictTo("ADMIN"),
   viewController.projectDetail,
@@ -66,6 +71,11 @@ router.get(
   "/manager/projects/:id/qr-display",
   viewAuth.restrictTo("MANAGER"),
   votingController.renderQrDisplay,
+);
+router.get(
+  "/manager/projects/:id/results",
+  viewAuth.restrictTo("MANAGER"),
+  viewController.projectResults,
 );
 router.get(
   "/manager/projects/:id",

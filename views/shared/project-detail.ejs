@@ -149,6 +149,13 @@
               <div><strong>Live QR display</strong><span>Shows the rotating one-use access QR and live visitor totals.</span></div>
               <a class="button secondary <%= votingControl.state === 'VOTING_OPEN' ? '' : 'disabled-link' %>" href="<%= votingControl.state === 'VOTING_OPEN' ? `${basePath}/projects/${project._id}/qr-display` : '#' %>"><img src="/icons/qr-code.svg" alt="" /> Open QR display</a>
             </div>
+
+            <% if (votingControl.state === 'VOTING_CLOSED') { %>
+              <div class="control-action-row">
+                <div><strong>Voting results</strong><span>Review the votes received by each group in every category.</span></div>
+                <a class="button secondary" href="<%= basePath %>/projects/<%= project._id %>/results"><img src="/icons/bar-chart-3.svg" alt="" /> View results</a>
+              </div>
+            <% } %>
           </div>
         </section>
       </section>
