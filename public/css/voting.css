@@ -814,6 +814,38 @@ button {
   display: block;
 }
 
+.vote-submitted-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 13px 14px;
+  border: 1px solid #b9dacd;
+  border-radius: 7px;
+  color: var(--success);
+  background: #e7f4ee;
+}
+
+.vote-submitted-notice > img {
+  width: 22px;
+  height: 22px;
+  filter: invert(37%) sepia(31%) saturate(919%) hue-rotate(105deg);
+}
+
+.vote-submitted-notice span {
+  display: grid;
+  gap: 1px;
+}
+
+.vote-submitted-notice strong {
+  font-size: 14px;
+}
+
+.vote-submitted-notice small {
+  color: #45685b;
+  font-size: 12px;
+}
+
 .category-section {
   min-width: 0;
   margin: 0;
@@ -860,6 +892,26 @@ button {
 
 .group-option:hover {
   border-color: #929a9e;
+}
+
+.ballot[data-vote-submitted="true"] .group-option {
+  cursor: default;
+}
+
+.ballot[data-vote-submitted="true"] .group-option:hover {
+  border-color: var(--line);
+}
+
+.ballot[data-vote-submitted="true"] .group-option:has(input:checked) {
+  border-color: var(--success);
+  box-shadow: 0 0 0 2px rgba(35, 117, 88, 0.12);
+}
+
+.ballot[data-vote-submitted="true"]
+  .group-option:has(input:checked)
+  .option-check {
+  border-color: var(--success);
+  background: var(--success);
 }
 
 .group-option:has(input:checked) {

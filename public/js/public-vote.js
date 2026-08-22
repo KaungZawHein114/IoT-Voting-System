@@ -45,6 +45,7 @@ if (voteForm) {
   const projectNext = document.querySelector("[data-project-next]");
   const voteBack = voteForm.querySelector("[data-vote-back]");
   const submitButton = voteForm.querySelector("[data-vote-submit]");
+  const voteSubmitted = voteForm.dataset.voteSubmitted === "true";
   let currentProject = 0;
 
   const setHash = (viewName) => {
@@ -131,6 +132,7 @@ if (voteForm) {
 
   voteForm.querySelectorAll("input[type=radio]").forEach((input) => {
     input.addEventListener("change", () => {
+      if (voteSubmitted) return;
       hideMessage();
       submitButton.disabled = false;
     });
@@ -139,6 +141,11 @@ if (voteForm) {
   voteForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     hideMessage();
+
+    if (voteSubmitted) {
+      showMessage("Your vote has already been submitted and cannot be changed.");
+      return;
+    }
 
     const selectedGroup = voteForm.querySelector(
       "input[type=radio]:checked",
@@ -163,7 +170,16 @@ if (voteForm) {
         body: JSON.stringify({ group: selectedGroup }),
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.message || "Vote could not be submitted");
+      if (!response.ok) {
+        if (
+          response.status === 409 &&
+          String(data.message || "").toLowerCase().includes("already voted")
+        ) {
+          window.location.reload();
+          return;
+        }
+        throw new Error(data.message || "Vote could not be submitted");
+      }
       window.location.reload();
     } catch (error) {
       showMessage(error.message);

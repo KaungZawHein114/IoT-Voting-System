@@ -15,30 +15,31 @@
     <link rel="stylesheet" href="/assets/css/public-vote.css" />
   </head>
   <body class="voting-app-page">
-    <% if (pageState !== 'OPEN') { const stateContent = { NO_ACCESS: ['Voting access required', 'Scan the live QR code displayed at the Public IoT Show to enter voting.'], EXPIRED: ['Voting access expired', 'This voting chance is no longer valid. Scan the current QR code if voting is still open.'], CLOSED: ['Voting is closed', 'This voting session can no longer submit a vote.'], VOTED: ['Vote submitted', 'Your pick for the People\'s Choice Award has been recorded. This voting session cannot vote again.'] }[pageState]; %>
+    <% if (pageState !== 'OPEN' && pageState !== 'VOTED') { const stateContent = { NO_ACCESS: ['Voting access required', 'Scan the live QR code displayed at the Public IoT Show to enter voting.'], EXPIRED: ['Voting access expired', 'This voting chance is no longer valid. Scan the current QR code if voting is still open.'], CLOSED: ['Voting is closed', 'This voting session can no longer submit a vote.'] }[pageState]; %>
       <main class="access-state">
         <div class="access-brand"><img src="/assets/images/gusto-logo.png" alt="GUSTO University" /></div>
         <span class="access-kicker">Public IoT Show</span>
         <h1><%= stateContent[0] %></h1>
         <p><%= stateContent[1] %></p>
-        <% if (pageState === 'VOTED') { %><span class="success-mark"><img src="/icons/check.svg" alt="" /></span><% } %>
       </main>
     <% } else { %>
-      <div class="ticket-splash" data-ticket-splash data-splash-key="<%= splashKey %>" role="status" aria-live="polite">
-        <div class="ticket-stage">
-          <div class="voting-ticket">
-            <div class="ticket-body">
-              <div class="ticket-heading"><span>Entry pass</span><strong>Public Show</strong></div>
-              <div class="ticket-validation"><img src="/icons/check.svg" alt="" /></div>
-              <span class="ticket-label">Your ballot is ready</span>
-              <h1>One voting opportunity</h1>
-              <p>Meet the groups, then cast your one vote for the People's Choice Award.</p>
+      <% if (pageState === 'OPEN') { %>
+        <div class="ticket-splash" data-ticket-splash data-splash-key="<%= splashKey %>" role="status" aria-live="polite">
+          <div class="ticket-stage">
+            <div class="voting-ticket">
+              <div class="ticket-body">
+                <div class="ticket-heading"><span>Entry pass</span><strong>Public Show</strong></div>
+                <div class="ticket-validation"><img src="/icons/check.svg" alt="" /></div>
+                <span class="ticket-label">Your ballot is ready</span>
+                <h1>One voting opportunity</h1>
+                <p>Meet the groups, then cast your one vote for the People's Choice Award.</p>
+              </div>
+              <div class="ticket-stub"><strong>01</strong><span>Ballot</span></div>
             </div>
-            <div class="ticket-stub"><strong>01</strong><span>Ballot</span></div>
+            <div class="ticket-status"><i></i><span>Access verified</span></div>
           </div>
-          <div class="ticket-status"><i></i><span>Access verified</span></div>
         </div>
-      </div>
+      <% } %>
 
       <header class="app-header">
         <div class="app-header-inner">
@@ -46,7 +47,7 @@
             <img src="/assets/images/gusto-logo.png" alt="" />
             <span><small>GUSTO Public Show</small><strong>People's Choice Award</strong></span>
           </a>
-          <span class="live-status"><i></i><span>Voting open</span></span>
+          <span class="live-status <%= pageState === 'VOTED' ? 'vote-recorded-status' : '' %>"><i></i><span><%= pageState === 'VOTED' ? 'Vote submitted' : 'Voting open' %></span></span>
         </div>
       </header>
 
@@ -55,7 +56,7 @@
           <div class="show-intro">
             <span class="eyebrow">Public IoT Show</span>
             <h1 id="show-view-title">People's Choice Award</h1>
-            <p>Explore all <%= groups.length %> groups, then vote for the one project you want to win the People's Choice Award. You get one vote from this device.</p>
+            <p><% if (pageState === 'VOTED') { %>Your vote has been recorded. You can still explore all <%= groups.length %> groups and review the People's Choice Award ballot.<% } else { %>Explore all <%= groups.length %> groups, then vote for the one project you want to win the People's Choice Award. You get one vote from this device.<% } %></p>
           </div>
 
           <div class="show-counts" aria-label="Show overview">
@@ -100,18 +101,21 @@
         </section>
 
         <section class="app-view voting-view" id="view-vote" data-app-view="vote" aria-labelledby="vote-view-title" hidden>
-          <form class="ballot" data-vote-form data-csrf="<%= csrfToken %>">
+          <form class="ballot" data-vote-form data-csrf="<%= csrfToken || '' %>" data-vote-submitted="<%= pageState === 'VOTED' ? 'true' : 'false' %>">
             <header class="award-heading">
               <span class="award-badge"><img src="/icons/trophy.svg" alt="" /></span>
-              <div><span class="eyebrow">Your ballot</span><h1 id="vote-view-title">People's Choice Award</h1><p>Pick the one group you want to win.</p></div>
+              <div><span class="eyebrow">Your ballot</span><h1 id="vote-view-title">People's Choice Award</h1><p><%= pageState === 'VOTED' ? 'Your ballot is complete and cannot be changed.' : 'Pick the one group you want to win.' %></p></div>
             </header>
+            <% if (pageState === 'VOTED') { %>
+              <div class="vote-submitted-notice" role="status"><img src="/icons/check.svg" alt="" /><span><strong>You have submitted your vote</strong><small>Your choice has been recorded successfully.</small></span></div>
+            <% } %>
             <div class="vote-message" data-vote-message role="alert"></div>
 
-            <fieldset class="category-section">
+            <fieldset class="category-section" <%= pageState === 'VOTED' ? 'disabled' : '' %>>
               <div class="group-options">
                 <% groups.forEach(group => { %>
                   <label class="group-option">
-                    <input type="radio" name="people-choice" value="<%= group._id %>" required />
+                    <input type="radio" name="people-choice" value="<%= group._id %>" required <%= votedGroupId === group._id.toString() ? 'checked' : '' %> />
                     <span class="group-visual">
                       <img src="<%= encodeURI(group.image) %>" alt="" />
                       <span class="option-check"><img src="/icons/check.svg" alt="Selected" /></span>
@@ -124,7 +128,7 @@
 
             <div class="view-actions vote-actions">
               <button class="secondary-action" type="button" data-vote-back><img src="/icons/arrow-left.svg" alt="" /> Back</button>
-              <button class="primary-action compact" type="submit" data-vote-submit disabled><img src="/icons/send.svg" alt="" /> Cast your vote</button>
+              <button class="primary-action compact" type="submit" data-vote-submit disabled><img src="/icons/<%= pageState === 'VOTED' ? 'check' : 'send' %>.svg" alt="" /> <%= pageState === 'VOTED' ? 'Vote submitted' : 'Cast your vote' %></button>
             </div>
           </form>
         </section>

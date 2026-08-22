@@ -475,6 +475,8 @@ exports.renderVotingPage = catchAsync(async (req, res) => {
     groups: [],
     categoryName: PUBLIC_SHOW_CATEGORY_NAME,
     csrfToken: null,
+    splashKey: null,
+    votedGroupId: null,
   };
 
   if (!rawToken || !session) {
@@ -485,7 +487,9 @@ exports.renderVotingPage = catchAsync(async (req, res) => {
     });
   }
 
-  const existingVote = await PublicVote.exists({ votingSession: session._id });
+  const existingVote = await PublicVote.findOne({
+    votingSession: session._id,
+  }).select("group");
   if (session.status === "VOTED" || existingVote) {
     if (session.status !== "VOTED") {
       await PublicVotingSession.updateOne(
@@ -493,9 +497,12 @@ exports.renderVotingPage = catchAsync(async (req, res) => {
         { status: "VOTED", votedAt: new Date() },
       );
     }
+    const groups = await getActiveGroups();
     return res.status(200).render("public-voting/page", {
       ...baseData,
       pageState: "VOTED",
+      groups,
+      votedGroupId: existingVote?.group?.toString() || null,
     });
   }
 
