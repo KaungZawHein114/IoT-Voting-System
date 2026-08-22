@@ -1,0 +1,146 @@
+<%- include('../partials/head') %>
+<div class="app-shell">
+  <%- include('../partials/sidebar') %>
+  <div class="app-frame">
+    <%- include('../partials/topbar') %>
+    <main class="page">
+      <header class="page-header">
+        <div>
+          <h2>Public IoT Show</h2>
+          <p><%= categoryName %> voting — admin-only, opened and closed by hand for the live show.</p>
+        </div>
+        <div class="page-actions">
+          <span class="status-badge <%= state === 'OPEN' ? 'status-voting_open' : 'status-not_published' %>"><%= state === 'OPEN' ? 'Voting open' : 'Voting closed' %></span>
+          <% if (state === 'OPEN') { %>
+            <a class="button primary" href="/admin/public-show/qr-display"><img src="/icons/qr-code.svg" alt="" /> Open QR display</a>
+          <% } %>
+        </div>
+      </header>
+
+      <div data-tabs>
+        <nav class="tabs" aria-label="Public IoT Show sections">
+          <button class="tab-button active" type="button" data-tab-target="overview">Overview</button>
+          <button class="tab-button" type="button" data-tab-target="groups">Groups (<%= groups.length %>)</button>
+          <button class="tab-button" type="button" data-tab-target="results">Results</button>
+        </nav>
+      </div>
+
+      <section class="tab-panel" data-tab-panel="overview">
+        <div class="voting-control-grid">
+          <section class="panel">
+            <div class="panel-header"><h3>Voting website</h3><span class="status-badge <%= state === 'OPEN' ? 'status-voting_open' : 'status-not_published' %>"><%= state === 'OPEN' ? 'Voting open' : 'Voting closed' %></span></div>
+            <div class="panel-body summary-list">
+              <div class="summary-row"><span>Category</span><strong><%= categoryName %></strong></div>
+              <div class="summary-row"><span>Public URL</span><strong class="public-path">/public-vote</strong></div>
+              <div class="summary-row"><span>Admitted visitors</span><strong><%= stats.scannedCount %></strong></div>
+              <div class="summary-row"><span>Votes submitted</span><strong><%= stats.votedCount %></strong></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header"><h3>Readiness</h3><span class="status-badge <%= readiness.ready ? 'status-active' : 'status-draft' %>"><%= readiness.ready ? 'READY' : 'INCOMPLETE' %></span></div>
+            <div class="panel-body">
+              <% if (readiness.ready) { %>
+                <div class="notice"><img src="/icons/circle-check.svg" alt="" /><span><%= readiness.activeGroups.length %> active groups are ready to receive votes.</span></div>
+              <% } else { %>
+                <ul class="readiness-list">
+                  <% readiness.missing.forEach(item => { %><li><img src="/icons/circle-x.svg" alt="" /><span><%= item %></span></li><% }) %>
+                </ul>
+              <% } %>
+            </div>
+          </section>
+        </div>
+
+        <section class="panel voting-actions-panel">
+          <div class="panel-header"><h3>Voting controls</h3></div>
+          <div class="panel-body">
+            <div class="control-action-row">
+              <div><strong>Voting website</strong><span>Opens the QR-driven ballot for every visitor to scan.</span></div>
+              <div class="inline-actions">
+                <% if (state !== 'OPEN') { %>
+                  <form data-api-form data-endpoint="/api/v1/public-show/open" data-method="POST" data-success="Voting opened" data-redirect="reload" data-confirm="Open voting for the Public IoT Show?"><button class="button primary" type="submit" <%= readiness.ready ? '' : 'disabled' %>><img src="/icons/play.svg" alt="" /> Open voting</button></form>
+                <% } else { %>
+                  <form data-api-form data-endpoint="/api/v1/public-show/close" data-method="POST" data-success="Voting closed" data-redirect="reload" data-confirm="Close voting? Every visitor mid-ballot will lose access and the QR code will stop working."><button class="button danger" type="submit"><img src="/icons/square.svg" alt="" /> Close voting</button></form>
+                <% } %>
+              </div>
+            </div>
+
+            <div class="control-action-row">
+              <div><strong>Live QR display</strong><span>Shows the rotating one-use access QR and live visitor totals — put this on the projector.</span></div>
+              <a class="button secondary <%= state === 'OPEN' ? '' : 'disabled-link' %>" href="<%= state === 'OPEN' ? '/admin/public-show/qr-display' : '#' %>"><img src="/icons/qr-code.svg" alt="" /> Open QR display</a>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="groups" hidden>
+        <section class="panel">
+          <div class="panel-header">
+            <h3>Show groups</h3>
+            <form data-api-form data-endpoint="/api/v1/public-show/groups/sync" data-method="POST" data-success="Groups synced" data-redirect="reload">
+              <button class="button secondary small" type="submit"><img src="/icons/refresh-cw.svg" alt="" /> Sync images from folder</button>
+            </form>
+          </div>
+          <% if (groups.length) { %>
+            <div class="table-shell standalone" style="border:0">
+              <table>
+                <thead><tr><th></th><th>Group</th><th>Title</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                  <% groups.forEach(group => { %>
+                    <tr>
+                      <td><img class="table-thumb" src="<%= encodeURI(group.image) %>" alt="" /></td>
+                      <td class="cell-primary">Group <%= group.groupNumber %></td>
+                      <td><%= group.title %><% if (group.description) { %><span class="cell-secondary"><%= group.description %></span><% } %></td>
+                      <td><span class="status-badge <%= statusClass(group.status) %>"><%= group.status %></span></td>
+                      <td><button class="button secondary small" type="button" data-open-dialog="edit-group-<%= group._id %>"><img src="/icons/pencil.svg" alt="" /> Edit</button></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="empty-state"><img src="/icons/images.svg" alt="" /><div>No groups yet. Drop images in the show folder, then sync.</div></div>
+          <% } %>
+        </section>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="results" hidden>
+        <section class="panel">
+          <div class="panel-header"><h3><%= categoryName %> results</h3><span class="cell-secondary"><%= totalVotes %> total vote<%= totalVotes === 1 ? '' : 's' %></span></div>
+          <div class="panel-body">
+            <% if (results.length) { %>
+              <div class="results-bars">
+                <% results.forEach((group, index) => { const pct = totalVotes ? Math.round((group.voteCount / totalVotes) * 100) : 0; %>
+                  <div class="result-bar-row">
+                    <span class="result-rank"><% if (index === 0 && group.voteCount > 0) { %><img src="/icons/crown.svg" alt="Leading" /><% } else { %><%= index + 1 %><% } %></span>
+                    <div class="result-bar-body">
+                      <div class="result-bar-heading"><strong>Group <%= group.groupNumber %> · <%= group.title %></strong><span><%= group.voteCount %> vote<%= group.voteCount === 1 ? '' : 's' %></span></div>
+                      <div class="result-bar-track"><span class="result-bar-fill" style="width:<%= pct %>%"></span></div>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+            <% } else { %>
+              <div class="empty-state"><img src="/icons/bar-chart-3.svg" alt="" /><div>No groups to show results for yet.</div></div>
+            <% } %>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+</div>
+
+<% groups.forEach(group => { %>
+  <dialog id="edit-group-<%= group._id %>">
+    <div class="dialog-header"><h3>Edit group <%= group.groupNumber %></h3><button class="icon-button" type="button" data-close-dialog><img src="/icons/x.svg" alt="Close" /></button></div>
+    <form data-api-form data-endpoint="/api/v1/public-show/groups/<%= group._id %>" data-method="PATCH" data-success="Group updated" data-redirect="reload">
+      <div class="dialog-body form-grid">
+        <div class="field full"><label>Title</label><input name="title" value="<%= group.title %>" required /></div>
+        <div class="field full"><label>Description (optional)</label><textarea name="description" maxlength="1200"><%= group.description || '' %></textarea></div>
+        <div class="field full"><label>Status</label><select name="status"><option value="ACTIVE" <%= group.status === 'ACTIVE' ? 'selected' : '' %>>Active — shown to voters</option><option value="INACTIVE" <%= group.status === 'INACTIVE' ? 'selected' : '' %>>Inactive — hidden from voters</option></select></div>
+      </div>
+      <div class="dialog-actions"><button class="button secondary" type="button" data-close-dialog>Cancel</button><button class="button primary" type="submit">Save group</button></div>
+    </form>
+  </dialog>
+<% }) %>
+<%- include('../partials/footer') %>

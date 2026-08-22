@@ -2,6 +2,7 @@ const express = require("express");
 
 const viewController = require("../controllers/viewController");
 const votingController = require("../controllers/votingController");
+const publicShowController = require("../controllers/publicShowController");
 const viewAuth = require("../middleware/viewAuthMiddleware");
 
 const router = express.Router();
@@ -55,6 +56,16 @@ router.get(
   "/admin/groups/:id",
   viewAuth.restrictTo("ADMIN"),
   viewController.groupDetail,
+);
+router.get(
+  "/admin/public-show",
+  viewAuth.restrictTo("ADMIN"),
+  publicShowController.renderControlPage,
+);
+router.get(
+  "/admin/public-show/qr-display",
+  viewAuth.restrictTo("ADMIN"),
+  publicShowController.renderQrDisplay,
 );
 
 router.get(

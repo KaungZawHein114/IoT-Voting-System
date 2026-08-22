@@ -1,0 +1,44 @@
+.display-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.display-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.display-button:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.display-button img {
+  width: 16px;
+  height: 16px;
+  filter: invert(1);
+}
+
+.display-button.danger {
+  border-color: rgba(230, 130, 140, 0.55);
+  background: rgba(166, 51, 62, 0.28);
+}
+
+.display-button.danger:hover {
+  background: rgba(166, 51, 62, 0.42);
+}
+
+.display-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

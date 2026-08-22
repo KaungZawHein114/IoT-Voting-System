@@ -23,6 +23,12 @@
       <img src="/icons/folder-kanban.svg" alt="" />
       <span>Projects</span>
     </a>
+    <% if (currentUser.role === 'ADMIN') { %>
+      <a class="nav-item <%= activeNav === 'public-show' ? 'active' : '' %>" href="/admin/public-show">
+        <img src="/icons/trophy.svg" alt="" />
+        <span>Public IoT Show</span>
+      </a>
+    <% } %>
   </nav>
 
   <div class="sidebar-account">

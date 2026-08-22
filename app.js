@@ -10,6 +10,9 @@ const projectRouter = require("./routes/projectRoutes");
 const groupRouter = require("./routes/groupRoutes");
 const votingApiRouter = require("./routes/votingApiRoutes");
 const votingViewRouter = require("./routes/votingViewRoutes");
+const publicShowRouter = require("./routes/publicShowRoutes");
+const publicVotingApiRouter = require("./routes/publicVotingApiRoutes");
+const publicVotingViewRouter = require("./routes/publicVotingViewRoutes");
 const viewRouter = require("./routes/viewRoutes");
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controllers/errorControllers");
@@ -71,6 +74,8 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/projects", projectRouter);
 app.use("/api/v1/groups", groupRouter);
 app.use("/api/v1/voting", votingApiRouter);
+app.use("/api/v1/public-show", publicShowRouter);
+app.use("/api/v1/public-voting", publicVotingApiRouter);
 
 app.use(
   "/uploads/groups",
@@ -78,6 +83,7 @@ app.use(
 );
 
 app.use("/vote", votingViewRouter);
+app.use("/public-vote", publicVotingViewRouter);
 app.use("/", viewRouter);
 
 // Handle unknown routes

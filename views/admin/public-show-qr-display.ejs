@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title><%= pageTitle %> | GUSTO IoT Show</title>
+    <link rel="icon" href="/assets/images/gusto-logo.png" />
+    <link rel="stylesheet" href="/assets/css/qr-display.css" />
+    <link rel="stylesheet" href="/assets/css/public-qr-display.css" />
+  </head>
+  <body>
+    <main class="qr-display" data-qr-display>
+      <section class="qr-information">
+        <div>
+          <a class="display-back" href="/admin/public-show">
+            <img src="/icons/arrow-left.svg" alt="" /> Back to show controls
+          </a>
+          <img class="display-logo" src="/assets/images/gusto-logo.png" alt="GUSTO University" />
+          <span class="display-label">GUSTO Public IoT Show</span>
+          <h1>Vote now</h1>
+          <p><%= categoryName %> — scan to cast your one vote.</p>
+        </div>
+
+        <section class="display-stats" aria-label="Live voting totals">
+          <article><span>Admitted visitors</span><strong data-scanned-count><%= stats.scannedCount %></strong></article>
+          <article><span>Votes submitted</span><strong data-voted-count><%= stats.votedCount %></strong></article>
+        </section>
+
+        <div class="display-actions">
+          <button class="display-button danger" type="button" data-close-voting><img src="/icons/square.svg" alt="" /> Close voting</button>
+          <a class="display-button" href="/admin/public-show#results"><img src="/icons/bar-chart-3.svg" alt="" /> View results</a>
+        </div>
+      </section>
+
+      <section class="qr-stage">
+        <div class="qr-status"><span class="live-dot"></span><strong data-qr-state><%= state === 'OPEN' ? 'Voting open' : 'Voting unavailable' %></strong></div>
+        <div class="qr-frame" data-qr-frame>
+          <img data-qr-image alt="Scan to vote in the Public IoT Show" />
+          <div class="qr-loading" data-qr-loading>Preparing secure QR code...</div>
+        </div>
+        <div class="qr-timer" aria-hidden="true"><span data-qr-progress></span></div>
+        <p data-qr-message>Scan the current code to receive one voting session.</p>
+      </section>
+    </main>
+    <script src="/assets/js/public-qr-display.js" defer></script>
+  </body>
+</html>

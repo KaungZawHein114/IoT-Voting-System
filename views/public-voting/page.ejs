@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <title><%= pageTitle %> | GUSTO IoT Show</title>
+    <link rel="icon" href="/assets/images/gusto-logo.png" />
+    <% if (pageState === 'OPEN') { %>
+      <script>try{if(sessionStorage.getItem(<%- JSON.stringify(`public-voting-pass:${splashKey}`) %>))document.documentElement.classList.add("skip-ticket-splash")}catch(error){}</script>
+    <% } %>
+    <link rel="stylesheet" href="/assets/css/voting.css" />
+    <link rel="stylesheet" href="/assets/css/public-vote.css" />
+  </head>
+  <body class="voting-app-page">
+    <% if (pageState !== 'OPEN') { const stateContent = { NO_ACCESS: ['Voting access required', 'Scan the live QR code displayed at the Public IoT Show to enter voting.'], EXPIRED: ['Voting access expired', 'This voting chance is no longer valid. Scan the current QR code if voting is still open.'], CLOSED: ['Voting is closed', 'This voting session can no longer submit a vote.'], VOTED: ['Vote submitted', 'Your pick for the People\'s Choice Award has been recorded. This voting session cannot vote again.'] }[pageState]; %>
+      <main class="access-state">
+        <div class="access-brand"><img src="/assets/images/gusto-logo.png" alt="GUSTO University" /></div>
+        <span class="access-kicker">Public IoT Show</span>
+        <h1><%= stateContent[0] %></h1>
+        <p><%= stateContent[1] %></p>
+        <% if (pageState === 'VOTED') { %><span class="success-mark"><img src="/icons/check.svg" alt="" /></span><% } %>
+      </main>
+    <% } else { %>
+      <div class="ticket-splash" data-ticket-splash data-splash-key="<%= splashKey %>" role="status" aria-live="polite">
+        <div class="ticket-stage">
+          <div class="voting-ticket">
+            <div class="ticket-body">
+              <div class="ticket-heading"><span>Entry pass</span><strong>Public Show</strong></div>
+              <div class="ticket-validation"><img src="/icons/check.svg" alt="" /></div>
+              <span class="ticket-label">Your ballot is ready</span>
+              <h1>One voting opportunity</h1>
+              <p>Meet the groups, then cast your one vote for the People's Choice Award.</p>
+            </div>
+            <div class="ticket-stub"><strong>01</strong><span>Ballot</span></div>
+          </div>
+          <div class="ticket-status"><i></i><span>Access verified</span></div>
+        </div>
+      </div>
+
+      <header class="app-header">
+        <div class="app-header-inner">
+          <a class="app-brand" href="#show" data-view-target="show" aria-label="Public IoT Show information">
+            <img src="/assets/images/gusto-logo.png" alt="" />
+            <span><small>GUSTO Public Show</small><strong>People's Choice Award</strong></span>
+          </a>
+          <span class="live-status"><i></i><span>Voting open</span></span>
+        </div>
+      </header>
+
+      <main class="vote-app">
+        <section class="app-view show-view" id="view-show" data-app-view="show" aria-labelledby="show-view-title">
+          <div class="show-intro">
+            <span class="eyebrow">Public IoT Show</span>
+            <h1 id="show-view-title">People's Choice Award</h1>
+            <p>Explore all <%= groups.length %> groups, then vote for the one project you want to win the People's Choice Award. You get one vote from this device.</p>
+          </div>
+
+          <div class="show-counts" aria-label="Show overview">
+            <div><strong><%= groups.length %></strong><span>Groups</span></div>
+            <div><strong>1</strong><span>Award to vote for</span></div>
+          </div>
+
+          <button class="primary-action" type="button" data-view-target="projects">
+            Explore the groups <img src="/icons/arrow-right.svg" alt="" />
+          </button>
+        </section>
+
+        <section class="app-view projects-view" id="view-projects" data-app-view="projects" aria-labelledby="projects-view-title" hidden>
+          <header class="view-heading">
+            <div><span class="eyebrow">Group tour</span><h1 id="projects-view-title">Meet the groups</h1></div>
+            <span class="view-counter"><strong data-project-current>1</strong> / <%= groups.length %></span>
+          </header>
+
+          <div class="project-tour" aria-live="polite">
+            <% groups.forEach((group, groupIndex) => { %>
+              <article class="project-feature" data-project-feature="<%= groupIndex %>" <%= groupIndex === 0 ? '' : 'hidden' %>>
+                <div class="project-image">
+                  <img src="<%= encodeURI(group.image) %>" alt="<%= group.title %>" />
+                  <span class="project-number">Group <%= group.groupNumber %></span>
+                </div>
+                <div class="project-content">
+                  <h2><%= group.title %></h2>
+                  <% if (group.description) { %><p><%= group.description %></p><% } %>
+                </div>
+              </article>
+            <% }) %>
+          </div>
+
+          <div class="tour-progress" role="group" aria-label="Choose a group">
+            <% groups.forEach((group, groupIndex) => { %><button type="button" data-project-dot="<%= groupIndex %>" class="<%= groupIndex === 0 ? 'active' : '' %>" aria-label="View Group <%= group.groupNumber %>" aria-current="<%= groupIndex === 0 ? 'true' : 'false' %>"></button><% }) %>
+          </div>
+
+          <div class="view-actions">
+            <button class="secondary-action icon-action" type="button" data-project-previous aria-label="Previous group" disabled><img src="/icons/arrow-left.svg" alt="" /></button>
+            <button class="primary-action compact" type="button" data-project-next>Next group <img src="/icons/arrow-right.svg" alt="" /></button>
+          </div>
+        </section>
+
+        <section class="app-view voting-view" id="view-vote" data-app-view="vote" aria-labelledby="vote-view-title" hidden>
+          <form class="ballot" data-vote-form data-csrf="<%= csrfToken %>">
+            <header class="award-heading">
+              <span class="award-badge"><img src="/icons/trophy.svg" alt="" /></span>
+              <div><span class="eyebrow">Your ballot</span><h1 id="vote-view-title">People's Choice Award</h1><p>Pick the one group you want to win.</p></div>
+            </header>
+            <div class="vote-message" data-vote-message role="alert"></div>
+
+            <fieldset class="category-section">
+              <div class="group-options">
+                <% groups.forEach(group => { %>
+                  <label class="group-option">
+                    <input type="radio" name="people-choice" value="<%= group._id %>" required />
+                    <span class="group-visual">
+                      <img src="<%= encodeURI(group.image) %>" alt="" />
+                      <span class="option-check"><img src="/icons/check.svg" alt="Selected" /></span>
+                    </span>
+                    <span class="group-choice-copy"><small>Group <%= group.groupNumber %></small><strong><%= group.title %></strong></span>
+                  </label>
+                <% }) %>
+              </div>
+            </fieldset>
+
+            <div class="view-actions vote-actions">
+              <button class="secondary-action" type="button" data-vote-back><img src="/icons/arrow-left.svg" alt="" /> Back</button>
+              <button class="primary-action compact" type="submit" data-vote-submit disabled><img src="/icons/send.svg" alt="" /> Cast your vote</button>
+            </div>
+          </form>
+        </section>
+      </main>
+
+      <nav class="app-navigation" aria-label="Voting website sections">
+        <button type="button" data-app-nav="show" data-view-target="show" aria-current="page"><img src="/icons/info.svg" alt="" /><span>Show</span></button>
+        <button type="button" data-app-nav="projects" data-view-target="projects"><img src="/icons/images.svg" alt="" /><span>Groups</span></button>
+        <button type="button" data-app-nav="vote" data-view-target="vote"><img src="/icons/trophy.svg" alt="" /><span>Vote</span></button>
+      </nav>
+      <script src="/assets/js/public-vote.js" defer></script>
+    <% } %>
+  </body>
+</html>

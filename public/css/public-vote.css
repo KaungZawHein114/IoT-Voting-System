@@ -1,0 +1,51 @@
+.award-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.award-badge {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f6c453, #d89a1f);
+  box-shadow: 0 8px 20px rgba(216, 154, 31, 0.35);
+}
+
+.award-badge img {
+  width: 28px;
+  height: 28px;
+  filter: invert(1);
+}
+
+.award-heading h1 {
+  margin: 4px 0 2px;
+  font-size: 27px;
+  line-height: 1.15;
+}
+
+.award-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+@media (min-width: 700px) {
+  .award-badge {
+    width: 64px;
+    height: 64px;
+  }
+
+  .award-badge img {
+    width: 32px;
+    height: 32px;
+  }
+
+  .award-heading h1 {
+    font-size: 30px;
+  }
+}
