@@ -60,7 +60,7 @@
                 <% if (state !== 'OPEN') { %>
                   <form data-api-form data-endpoint="/api/v1/public-show/open" data-method="POST" data-success="Voting opened" data-redirect="reload" data-confirm="Open voting for the Public IoT Show?"><button class="button primary" type="submit" <%= readiness.ready ? '' : 'disabled' %>><img src="/icons/play.svg" alt="" /> Open voting</button></form>
                 <% } else { %>
-                  <form data-api-form data-endpoint="/api/v1/public-show/close" data-method="POST" data-success="Voting closed" data-redirect="reload" data-confirm="Close voting? Every visitor mid-ballot will lose access and the QR code will stop working."><button class="button danger" type="submit"><img src="/icons/square.svg" alt="" /> Close voting</button></form>
+                  <button class="button danger" type="button" data-close-voting-gated><img src="/icons/square.svg" alt="" /> Close voting</button>
                 <% } %>
               </div>
             </div>
@@ -106,23 +106,14 @@
 
       <section class="tab-panel" data-tab-panel="results" hidden>
         <section class="panel">
-          <div class="panel-header"><h3><%= categoryName %> results</h3><span class="cell-secondary"><%= totalVotes %> total vote<%= totalVotes === 1 ? '' : 's' %></span></div>
+          <div class="panel-header"><h3><%= categoryName %> results</h3><span class="cell-secondary" data-results-total hidden></span></div>
           <div class="panel-body">
-            <% if (results.length) { %>
-              <div class="results-bars">
-                <% results.forEach((group, index) => { const pct = totalVotes ? Math.round((group.voteCount / totalVotes) * 100) : 0; %>
-                  <div class="result-bar-row">
-                    <span class="result-rank"><% if (index === 0 && group.voteCount > 0) { %><img src="/icons/crown.svg" alt="Leading" /><% } else { %><%= index + 1 %><% } %></span>
-                    <div class="result-bar-body">
-                      <div class="result-bar-heading"><strong>Group <%= group.groupNumber %> · <%= group.title %></strong><span><%= group.voteCount %> vote<%= group.voteCount === 1 ? '' : 's' %></span></div>
-                      <div class="result-bar-track"><span class="result-bar-fill" style="width:<%= pct %>%"></span></div>
-                    </div>
-                  </div>
-                <% }) %>
-              </div>
-            <% } else { %>
-              <div class="empty-state"><img src="/icons/bar-chart-3.svg" alt="" /><div>No groups to show results for yet.</div></div>
-            <% } %>
+            <div class="results-locked" data-results-locked>
+              <img src="/icons/lock.svg" alt="" />
+              <p>Results are protected. Enter the admin email and password to view them.</p>
+              <button class="button primary" type="button" data-unlock-results><img src="/icons/eye.svg" alt="" /> Unlock results</button>
+            </div>
+            <div class="results-bars" data-results-bars hidden></div>
           </div>
         </section>
       </section>
@@ -143,4 +134,18 @@
     </form>
   </dialog>
 <% }) %>
+
+<dialog id="admin-verify-dialog">
+  <div class="dialog-header"><h3>Confirm admin access</h3><button class="icon-button" type="button" data-close-dialog><img src="/icons/x.svg" alt="Close" /></button></div>
+  <form id="admin-verify-form">
+    <div class="dialog-body form-grid">
+      <div class="field full"><label for="verify-email">Admin email</label><input id="verify-email" name="email" type="email" autocomplete="username" required /></div>
+      <div class="field full"><label for="verify-password">Admin password</label><input id="verify-password" name="password" type="password" autocomplete="current-password" required /></div>
+      <div class="field full"><p class="login-message" data-verify-error></p></div>
+    </div>
+    <div class="dialog-actions"><button class="button secondary" type="button" data-close-dialog>Cancel</button><button class="button primary" type="submit">Verify</button></div>
+  </form>
+</dialog>
+
+<script src="/assets/js/public-show-admin.js" defer></script>
 <%- include('../partials/footer') %>

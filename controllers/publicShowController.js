@@ -6,6 +6,7 @@ const PublicShowGroup = require("../models/publicShowGroupModel");
 const PublicQrAccessToken = require("../models/publicQrAccessTokenModel");
 const PublicVote = require("../models/publicVoteModel");
 const PublicVotingSession = require("../models/publicVotingSessionModel");
+const User = require("../models/userModel");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const {
@@ -27,7 +28,10 @@ const {
 } = require("../services/votingTokenService");
 
 const SESSION_COOKIE = "publicVoteSession";
-const QR_TOKEN_TTL_MS = 30000;
+const QR_TOKEN_TTL_MS = 5000;
+// How long a re-entered admin password unlocks the sensitive actions below —
+// long enough to cover one show without repeat prompts, short enough to expire on its own.
+const ADMIN_ACTION_TTL_MS = 6 * 60 * 60 * 1000;
 const VOTING_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
 const setNoStoreHeaders = (res) => {
@@ -69,6 +73,45 @@ const findBrowserSession = async (req) => {
     sessionTokenHash: hashToken(rawToken),
   });
   return { rawToken, session };
+};
+
+// Short-lived, stateless proof that the admin password was just re-entered.
+// Gates the two actions anyone standing at an already-logged-in screen could otherwise trigger.
+const createAdminActionToken = (userId) => {
+  const expiresAt = Date.now() + ADMIN_ACTION_TTL_MS;
+  const signature = crypto
+    .createHmac("sha256", process.env.JWT_SECRET)
+    .update(`admin-action:${userId}:${expiresAt}`)
+    .digest("base64url");
+  return `${expiresAt}.${signature}`;
+};
+
+const validAdminActionToken = (userId, candidate) => {
+  if (!candidate || typeof candidate !== "string") return false;
+  const [expiresAtRaw, signature] = candidate.split(".");
+  const expiresAt = Number(expiresAtRaw);
+  if (!Number.isFinite(expiresAt) || expiresAt < Date.now() || !signature) {
+    return false;
+  }
+
+  const expected = crypto
+    .createHmac("sha256", process.env.JWT_SECRET)
+    .update(`admin-action:${userId}:${expiresAt}`)
+    .digest("base64url");
+  const expectedBuffer = Buffer.from(expected);
+  const receivedBuffer = Buffer.from(signature);
+  return (
+    expectedBuffer.length === receivedBuffer.length &&
+    crypto.timingSafeEqual(expectedBuffer, receivedBuffer)
+  );
+};
+
+const requireAdminActionToken = (req, next) => {
+  if (validAdminActionToken(req.user._id.toString(), req.get("x-admin-action"))) {
+    return true;
+  }
+  next(new AppError("Re-enter the admin email and password to continue", 401));
+  return false;
 };
 
 const sendControlResponse = async (res, show, statusCode = 200) => {
@@ -125,8 +168,34 @@ exports.openVoting = catchAsync(async (req, res, next) => {
   await sendControlResponse(res, show);
 });
 
+// POST /api/v1/public-show/verify-admin
+exports.verifyAdmin = catchAsync(async (req, res, next) => {
+  const email = String(req.body.email || "")
+    .trim()
+    .toLowerCase();
+  const password = String(req.body.password || "");
+
+  const user = await User.findById(req.user._id).select("+password");
+  const valid =
+    user &&
+    email === user.email &&
+    password &&
+    (await user.correctPassword(password, user.password));
+
+  if (!valid) {
+    return next(new AppError("Incorrect admin email or password", 401));
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: { token: createAdminActionToken(user._id.toString()) },
+  });
+});
+
 // POST /api/v1/public-show/close
-exports.closeVoting = catchAsync(async (req, res) => {
+exports.closeVoting = catchAsync(async (req, res, next) => {
+  if (!requireAdminActionToken(req, next)) return;
+
   const show = await getOrCreateShow();
 
   if (show.isOpen) {
@@ -197,8 +266,11 @@ exports.getQrTokenStatus = catchAsync(async (req, res) => {
   });
 });
 
-// GET /api/v1/public-show/results — always available, open or closed
-exports.getResultsSummary = catchAsync(async (req, res) => {
+// GET /api/v1/public-show/results — always available (open or closed) but gated
+// behind a freshly re-entered admin password; see verifyAdmin above.
+exports.getResultsSummary = catchAsync(async (req, res, next) => {
+  if (!requireAdminActionToken(req, next)) return;
+
   const { results, totalVotes } = await getResults();
   res.status(200).json({ status: "success", data: { results, totalVotes } });
 });
@@ -258,12 +330,15 @@ exports.syncGroups = catchAsync(async (req, res, next) => {
 ========================================== */
 
 // GET /admin/public-show
+// Results are deliberately NOT loaded here — the Results tab fetches them
+// client-side only after a fresh admin password check (see verify-admin/results
+// above). Embedding them in this render would leak vote counts into the page
+// source before anyone unlocks anything.
 exports.renderControlPage = catchAsync(async (req, res) => {
   const show = await getOrCreateShow();
   const groups = await getAllGroups();
   const readiness = getReadiness(groups);
   const stats = await getStats();
-  const { results, totalVotes } = await getResults();
 
   res.status(200).render("admin/public-show", {
     pageTitle: "Public IoT Show",
@@ -273,8 +348,6 @@ exports.renderControlPage = catchAsync(async (req, res) => {
     groups,
     readiness,
     stats,
-    results,
-    totalVotes,
     categoryName: PUBLIC_SHOW_CATEGORY_NAME,
   });
 });

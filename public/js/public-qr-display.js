@@ -79,7 +79,7 @@ if (display) {
   const pollToken = async () => {
     if (!currentTokenId || document.hidden) return;
     const remaining = Math.max(expiresAt - Date.now(), 0);
-    progress.style.width = `${Math.min((remaining / 30000) * 100, 100)}%`;
+    progress.style.width = `${Math.min((remaining / 5000) * 100, 100)}%`;
 
     try {
       const data = await responseData(
@@ -105,36 +105,83 @@ if (display) {
   };
 
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) createToken();
+    if (document.hidden) return;
+    // Resume the existing token instead of discarding a still-valid QR every
+    // time the tab regains focus (e.g. switching away to take a screenshot).
+    if (currentTokenId) {
+      pollToken();
+    } else {
+      createToken();
+    }
   });
 
-  closeButton?.addEventListener("click", async () => {
-    if (
-      !window.confirm(
-        "Close voting? Every visitor mid-ballot will lose access and the QR code will stop working.",
-      )
-    ) {
-      return;
-    }
+  const verifyDialog = document.querySelector("#admin-verify-dialog");
+  const verifyForm = document.querySelector("#admin-verify-form");
+  const verifyErrorEl = verifyForm?.querySelector("[data-verify-error]");
 
-    closeButton.disabled = true;
+  const openVerifyDialog = () => {
+    if (!verifyDialog) return;
+    verifyForm.reset();
+    if (verifyErrorEl) verifyErrorEl.hidden = true;
+    verifyDialog.showModal();
+    verifyDialog.querySelector("#verify-email")?.focus();
+  };
+
+  verifyDialog?.querySelectorAll("[data-verify-cancel]").forEach((button) => {
+    button.addEventListener("click", () => verifyDialog.close());
+  });
+  verifyDialog?.addEventListener("click", (event) => {
+    if (event.target === verifyDialog) verifyDialog.close();
+  });
+
+  verifyForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submitButton = verifyForm.querySelector("button[type=submit]");
+    submitButton.disabled = true;
+    if (verifyErrorEl) verifyErrorEl.hidden = true;
+
     try {
-      const response = await fetch("/api/v1/public-show/close", {
+      const verifyRes = await fetch("/api/v1/public-show/verify-admin", {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: verifyForm.email.value,
+          password: verifyForm.password.value,
+        }),
+      });
+      const verifyBody = await verifyRes.json().catch(() => ({}));
+      if (!verifyRes.ok) {
+        throw new Error(verifyBody.message || "Verification failed");
+      }
+
+      const closeRes = await fetch("/api/v1/public-show/close", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Admin-Action": verifyBody.data.token,
+        },
         body: "{}",
       });
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.message || "Could not close voting");
+      if (!closeRes.ok) {
+        const closeBody = await closeRes.json().catch(() => ({}));
+        throw new Error(closeBody.message || "Could not close voting");
       }
+
+      verifyDialog.close();
       window.location.assign("/admin/public-show");
     } catch (error) {
-      window.alert(error.message);
-      closeButton.disabled = false;
+      if (verifyErrorEl) {
+        verifyErrorEl.textContent = error.message;
+        verifyErrorEl.hidden = false;
+      }
+    } finally {
+      submitButton.disabled = false;
     }
   });
+
+  closeButton?.addEventListener("click", () => openVerifyDialog());
 
   createToken();
 }

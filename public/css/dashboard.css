@@ -1249,3 +1249,23 @@ dialog::backdrop {
   background: var(--brand);
   transition: width 260ms ease;
 }
+
+.results-locked {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 44px 20px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.results-locked img {
+  width: 30px;
+  height: 30px;
+  opacity: 0.45;
+}
+
+.results-locked p {
+  max-width: 320px;
+  margin: 0;
+}

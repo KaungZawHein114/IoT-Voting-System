@@ -44,6 +44,20 @@
         <p data-qr-message>Scan the current code to receive one voting session.</p>
       </section>
     </main>
+
+    <dialog id="admin-verify-dialog">
+      <div class="verify-dialog-header"><h3>Confirm admin access</h3><button class="icon-close-button" type="button" data-verify-cancel><img src="/icons/x.svg" alt="Close" /></button></div>
+      <form id="admin-verify-form">
+        <div class="verify-dialog-body">
+          <p class="verify-hint">Closing voting requires the admin email and password every time.</p>
+          <div class="verify-field"><label for="verify-email">Admin email</label><input id="verify-email" name="email" type="email" autocomplete="username" required /></div>
+          <div class="verify-field"><label for="verify-password">Admin password</label><input id="verify-password" name="password" type="password" autocomplete="current-password" required /></div>
+          <p class="verify-error" data-verify-error hidden></p>
+        </div>
+        <div class="verify-dialog-actions"><button class="verify-button" type="button" data-verify-cancel>Cancel</button><button class="verify-button primary" type="submit">Verify &amp; close voting</button></div>
+      </form>
+    </dialog>
+
     <script src="/assets/js/public-qr-display.js" defer></script>
   </body>
 </html>

@@ -8,6 +8,7 @@ const router = express.Router();
 router.use(authController.protect, authController.restrictTo("ADMIN"));
 
 router.get("/control", publicShowController.getControl);
+router.post("/verify-admin", publicShowController.verifyAdmin);
 router.post("/open", publicShowController.openVoting);
 router.post("/close", publicShowController.closeVoting);
 router.post("/qr-token", publicShowController.createQrToken);
