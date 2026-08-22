@@ -112,6 +112,37 @@ button {
   animation: spin 700ms linear infinite;
 }
 
+.access-error-mark {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  margin: 22px 0;
+  place-items: center;
+  border: 2px solid #e4b9bd;
+  border-radius: 50%;
+  color: var(--danger);
+  background: #f9e9eb;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.admission-access-state[data-admission-state="error"] h1 {
+  color: var(--danger);
+}
+
+.access-state .access-guidance {
+  max-width: 380px;
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px solid #c8dce7;
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--brand-soft);
+  font-size: 14px;
+  font-weight: 650;
+}
+
 .success-mark {
   display: grid;
   width: 52px;
