@@ -2,3 +2,5 @@ node_modules/
 config.env
 .DS_Store
 uploads/
+# Local project-structure helper; do not commit
+structure.py

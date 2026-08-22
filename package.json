@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "create:academic-head": "node scripts/createAcademicHead.js",
+    "reset:public-votes": "NODE_ENV=development node scripts/resetPublicVotes.js",
+    "reset:public-votes:atlas": "NODE_ENV=production node scripts/resetPublicVotes.js",
     "dev": "NODE_ENV=development nodemon server.js",
     "prod": "NODE_ENV=production node server.js",
     "test": "node --test"
