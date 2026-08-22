@@ -10,10 +10,10 @@ if (display) {
   const votedCount = display.querySelector("[data-voted-count]");
   const closeButton = display.querySelector("[data-close-voting]");
 
-  const QR_TTL_MS = 30000;
+  const QR_TTL_MS = 10000;
   // Never swap the visible QR faster than this, no matter what triggers a
   // refresh attempt.
-  const MIN_DISPLAY_MS = 4000;
+  const MIN_DISPLAY_MS = 1000;
   const HEARTBEAT_MS = 250;
 
   let currentTokenId;
@@ -21,6 +21,7 @@ if (display) {
   let lastShownAt = 0;
   let requestInFlight = false;
   let unavailableUntil = 0;
+  let progressAnimationId;
 
   const responseData = async (response) => {
     const data = await response.json().catch(() => ({}));
@@ -33,15 +34,58 @@ if (display) {
     votedCount.textContent = stats.votedCount ?? votedCount.textContent;
   };
 
+  const setProgress = (remainingMs) => {
+    const progressRatio = Math.max(
+      0,
+      Math.min(remainingMs / QR_TTL_MS, 1),
+    );
+    progress.style.transform = `scaleX(${progressRatio})`;
+  };
+
+  const stopProgressAnimation = ({ reset = false } = {}) => {
+    if (progressAnimationId !== undefined) {
+      window.cancelAnimationFrame(progressAnimationId);
+      progressAnimationId = undefined;
+    }
+    if (reset) setProgress(0);
+  };
+
+  // Rendering is kept separate from server polling so a slow status request
+  // cannot make the countdown jump. Absolute time keeps the bar accurate if
+  // the browser pauses animation frames while the tab is in the background.
+  const animateProgress = () => {
+    if (!currentTokenId) {
+      progressAnimationId = undefined;
+      return;
+    }
+
+    const remaining = Math.max(displayExpiresAt - Date.now(), 0);
+    setProgress(remaining);
+
+    if (remaining === 0) {
+      currentTokenId = undefined;
+      progressAnimationId = undefined;
+      return;
+    }
+
+    progressAnimationId = window.requestAnimationFrame(animateProgress);
+  };
+
+  const startProgressAnimation = () => {
+    stopProgressAnimation();
+    setProgress(displayExpiresAt - Date.now());
+    progressAnimationId = window.requestAnimationFrame(animateProgress);
+  };
+
   const showUnavailable = (text) => {
     currentTokenId = undefined;
+    stopProgressAnimation({ reset: true });
     image.removeAttribute("src");
     image.classList.remove("visible");
     loading.hidden = false;
     loading.textContent = text;
     state.textContent = "Voting unavailable";
     message.textContent = "Open voting from the Public IoT Show control page.";
-    progress.style.width = "0%";
     unavailableUntil = Date.now() + 2000;
   };
 
@@ -69,7 +113,7 @@ if (display) {
         }),
       );
       currentTokenId = data.publicId;
-      // The display rotates at 30 seconds. The server keeps the underlying
+      // The display rotates at 10 seconds. The server keeps the underlying
       // link valid for a short grace period after it disappears from screen.
       displayExpiresAt = new Date(data.displayExpiresAt).getTime();
       lastShownAt = Date.now();
@@ -80,6 +124,7 @@ if (display) {
       message.textContent =
         "Scan the current code to receive one voting session.";
       updateStats(data.stats);
+      startProgressAnimation();
     } catch (error) {
       showUnavailable(error.message);
     } finally {
@@ -89,15 +134,6 @@ if (display) {
 
   const pollToken = async () => {
     if (requestInFlight || !currentTokenId) return;
-    const remaining = Math.max(displayExpiresAt - Date.now(), 0);
-    progress.style.width = `${Math.min((remaining / QR_TTL_MS) * 100, 100)}%`;
-
-    // Stop displaying this QR after 30 seconds even though the server accepts
-    // its link for five more seconds as a scan/admission grace period.
-    if (remaining === 0) {
-      currentTokenId = undefined;
-      return;
-    }
 
     requestInFlight = true;
     try {
@@ -114,6 +150,7 @@ if (display) {
       }
       if (data.claimed || data.expired) {
         currentTokenId = undefined;
+        stopProgressAnimation({ reset: true });
       }
     } catch (error) {
       message.textContent = error.message;

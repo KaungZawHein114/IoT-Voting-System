@@ -38,6 +38,8 @@ if (voteForm) {
   const projectFeatures = Array.from(
     document.querySelectorAll("[data-project-feature]"),
   );
+  const projectsView = document.querySelector('[data-app-view="projects"]');
+  const projectTour = document.querySelector(".project-tour");
   const projectDots = Array.from(document.querySelectorAll("[data-project-dot]"));
   const message = voteForm.querySelector("[data-vote-message]");
   const projectCurrent = document.querySelector("[data-project-current]");
@@ -46,7 +48,13 @@ if (voteForm) {
   const voteBack = voteForm.querySelector("[data-vote-back]");
   const submitButton = voteForm.querySelector("[data-vote-submit]");
   const voteSubmitted = voteForm.dataset.voteSubmitted === "true";
+  const groupFocusEnter = document.querySelector("[data-group-focus-enter]");
+  const groupFocusExit = document.querySelector("[data-group-focus-exit]");
+  const voteSuccess = document.querySelector("[data-vote-success]");
   let currentProject = 0;
+  let groupFocusMode = false;
+  let swipeStartX = 0;
+  let swipeStartY = 0;
 
   const setHash = (viewName) => {
     const url = new URL(window.location.href);
@@ -57,7 +65,7 @@ if (voteForm) {
   const showView = (viewName, updateHash = true) => {
     const validView = views.some((view) => view.dataset.appView === viewName)
       ? viewName
-      : "show";
+      : "vote";
 
     views.forEach((view) => {
       view.hidden = view.dataset.appView !== validView;
@@ -74,9 +82,37 @@ if (voteForm) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const setGroupFocusMode = (enabled) => {
+    groupFocusMode = Boolean(enabled);
+    document.body.classList.toggle("group-focus-mode", groupFocusMode);
+    groupFocusEnter.hidden = groupFocusMode;
+    groupFocusEnter.setAttribute("aria-pressed", String(groupFocusMode));
+    groupFocusExit.hidden = !groupFocusMode;
+
+    if (groupFocusMode) {
+      projectsView.scrollTop = 0;
+      groupFocusExit.focus({ preventScroll: true });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      groupFocusEnter.focus({ preventScroll: true });
+    }
+  };
+
   document.querySelectorAll("[data-view-target]").forEach((button) => {
     button.addEventListener("click", (event) => {
       event.preventDefault();
+
+      const groupId = button.dataset.selectGroup;
+      if (groupId && !voteSubmitted) {
+        const groupInput = Array.from(
+          voteForm.querySelectorAll("input[type=radio]"),
+        ).find((input) => input.value === groupId);
+        if (groupInput) {
+          groupInput.checked = true;
+          groupInput.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      }
+
       showView(button.dataset.viewTarget);
     });
   });
@@ -96,9 +132,51 @@ if (voteForm) {
     projectPrevious.disabled = currentProject === 0;
     projectNext.innerHTML =
       currentProject === projectFeatures.length - 1
-        ? 'Start voting <img src="/icons/trophy.svg" alt="" />'
-        : 'Next group <img src="/icons/arrow-right.svg" alt="" />';
+        ? 'Vote <img src="/icons/trophy.svg" alt="" />'
+        : 'Next <img src="/icons/arrow-right.svg" alt="" />';
+    projectNext.setAttribute(
+      "aria-label",
+      currentProject === projectFeatures.length - 1
+        ? "Return to the ballot"
+        : "Next group",
+    );
+    if (groupFocusMode) projectsView.scrollTop = 0;
   };
+
+  groupFocusEnter.addEventListener("click", () => setGroupFocusMode(true));
+  groupFocusExit.addEventListener("click", () => setGroupFocusMode(false));
+
+  document.addEventListener("keydown", (event) => {
+    if (!groupFocusMode) return;
+    if (event.key === "Escape") setGroupFocusMode(false);
+    if (event.key === "ArrowLeft") showProject(currentProject - 1);
+    if (event.key === "ArrowRight") showProject(currentProject + 1);
+  });
+
+  projectTour.addEventListener(
+    "touchstart",
+    (event) => {
+      if (!groupFocusMode || event.touches.length !== 1) return;
+      swipeStartX = event.touches[0].clientX;
+      swipeStartY = event.touches[0].clientY;
+    },
+    { passive: true },
+  );
+
+  projectTour.addEventListener(
+    "touchend",
+    (event) => {
+      if (!groupFocusMode || event.changedTouches.length !== 1) return;
+      const deltaX = event.changedTouches[0].clientX - swipeStartX;
+      const deltaY = event.changedTouches[0].clientY - swipeStartY;
+      if (Math.abs(deltaX) < 55 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.2) {
+        return;
+      }
+
+      showProject(currentProject + (deltaX < 0 ? 1 : -1));
+    },
+    { passive: true },
+  );
 
   projectPrevious.addEventListener("click", () => showProject(currentProject - 1));
   projectNext.addEventListener("click", () => {
@@ -157,7 +235,9 @@ if (voteForm) {
 
     submitButton.disabled = true;
     submitButton.dataset.label = submitButton.innerHTML;
-    submitButton.textContent = "Submitting...";
+    submitButton.classList.add("is-submitting");
+    submitButton.innerHTML =
+      '<span class="vote-button-spinner" aria-hidden="true"></span> Recording vote...';
 
     try {
       const response = await fetch("/api/v1/public-voting/votes", {
@@ -180,10 +260,16 @@ if (voteForm) {
         }
         throw new Error(data.message || "Vote could not be submitted");
       }
-      window.location.reload();
+      voteSuccess.hidden = false;
+      document.body.classList.add("vote-success-active");
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      window.setTimeout(() => window.location.reload(), reducedMotion ? 450 : 1450);
     } catch (error) {
       showMessage(error.message);
       submitButton.disabled = false;
+      submitButton.classList.remove("is-submitting");
       submitButton.innerHTML = submitButton.dataset.label;
     }
   });
@@ -191,7 +277,7 @@ if (voteForm) {
   showProject(0);
   const initialView = window.location.hash.slice(1);
   showView(
-    ["show", "projects", "vote"].includes(initialView) ? initialView : "show",
+    ["show", "projects", "vote"].includes(initialView) ? initialView : "vote",
     false,
   );
 }

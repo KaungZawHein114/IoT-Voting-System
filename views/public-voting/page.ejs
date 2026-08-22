@@ -43,7 +43,7 @@
 
       <header class="app-header">
         <div class="app-header-inner">
-          <a class="app-brand" href="#show" data-view-target="show" aria-label="Public IoT Show information">
+          <a class="app-brand" href="#vote" data-view-target="vote" aria-label="People's Choice Award ballot">
             <img src="/assets/images/gusto-logo.png" alt="" />
             <span><small>GUSTO Public Show</small><strong>People's Choice Award</strong></span>
           </a>
@@ -52,7 +52,7 @@
       </header>
 
       <main class="vote-app">
-        <section class="app-view show-view" id="view-show" data-app-view="show" aria-labelledby="show-view-title">
+        <section class="app-view show-view" id="view-show" data-app-view="show" aria-labelledby="show-view-title" hidden>
           <div class="show-intro">
             <span class="eyebrow">Public IoT Show</span>
             <h1 id="show-view-title">People's Choice Award</h1>
@@ -71,36 +71,53 @@
 
         <section class="app-view projects-view" id="view-projects" data-app-view="projects" aria-labelledby="projects-view-title" hidden>
           <header class="view-heading">
-            <div><span class="eyebrow">Group tour</span><h1 id="projects-view-title">Meet the groups</h1></div>
+            <div><span class="eyebrow">Project showcase</span><h1 id="projects-view-title">Meet the groups</h1></div>
             <span class="view-counter"><strong data-project-current>1</strong> / <%= groups.length %></span>
           </header>
 
+          <button class="group-focus-button group-focus-enter" type="button" data-group-focus-enter aria-label="Open full-screen group posters" aria-pressed="false">
+            <img src="/icons/maximize-2.svg" alt="" />
+          </button>
+          <button class="group-focus-button group-focus-exit" type="button" data-group-focus-exit aria-label="Exit full-screen group posters" hidden>
+            <img src="/icons/minimize-2.svg" alt="" />
+          </button>
+
+          <div class="group-tour-toolbar" aria-label="Browse project groups">
+            <button class="secondary-action icon-action" type="button" data-project-previous aria-label="Previous group" disabled><img src="/icons/arrow-left.svg" alt="" /></button>
+            <div class="tour-progress" role="group" aria-label="Choose a group">
+              <% groups.forEach((group, groupIndex) => { %><button type="button" data-project-dot="<%= groupIndex %>" class="<%= groupIndex === 0 ? 'active' : '' %>" aria-label="View Group <%= group.groupNumber %>" aria-current="<%= groupIndex === 0 ? 'true' : 'false' %>"></button><% }) %>
+            </div>
+            <button class="primary-action compact" type="button" data-project-next>Next <img src="/icons/arrow-right.svg" alt="" /></button>
+          </div>
+
           <div class="project-tour" aria-live="polite">
             <% groups.forEach((group, groupIndex) => { %>
+              <% const posterFile = group.sourceFile === 'AutoPetrol.jpg' ? 'AutoPetrol-web.jpg' : group.sourceFile; %>
+              <% const fullPosterImage = posterFile ? group.image.replace(/\/[^/]+$/, `/full/${posterFile}`) : group.image; %>
               <article class="project-feature" data-project-feature="<%= groupIndex %>" <%= groupIndex === 0 ? '' : 'hidden' %>>
-                <div class="project-image">
-                  <img src="<%= encodeURI(group.image) %>" alt="<%= group.title %>" />
-                  <span class="project-number">Group <%= group.groupNumber %></span>
-                </div>
                 <div class="project-content">
+                  <span class="project-group-number">Group <%= group.groupNumber %></span>
                   <h2><%= group.title %></h2>
-                  <% if (group.description) { %><p><%= group.description %></p><% } %>
+                  <% if (group.description && group.description.trim()) { %>
+                    <div class="project-description">
+                      <strong>About this project</strong>
+                      <p><%= group.description %></p>
+                    </div>
+                  <% } %>
+                  <button class="primary-action project-vote-action" type="button" data-view-target="vote" data-select-group="<%= group._id %>">
+                    <%= pageState === 'VOTED' ? 'Review your ballot' : 'Choose this group' %> <img src="/icons/<%= pageState === 'VOTED' ? 'arrow-right' : 'trophy' %>.svg" alt="" />
+                  </button>
                 </div>
+                <a class="project-poster" href="<%= encodeURI(fullPosterImage) %>" target="_blank" rel="noopener" aria-label="Open the full <%= group.title %> project poster">
+                  <img src="<%= encodeURI(fullPosterImage) %>" alt="<%= group.title %> project poster" loading="lazy" decoding="async" />
+                  <span>Tap to open the full poster <span aria-hidden="true">↗</span></span>
+                </a>
               </article>
             <% }) %>
           </div>
-
-          <div class="tour-progress" role="group" aria-label="Choose a group">
-            <% groups.forEach((group, groupIndex) => { %><button type="button" data-project-dot="<%= groupIndex %>" class="<%= groupIndex === 0 ? 'active' : '' %>" aria-label="View Group <%= group.groupNumber %>" aria-current="<%= groupIndex === 0 ? 'true' : 'false' %>"></button><% }) %>
-          </div>
-
-          <div class="view-actions">
-            <button class="secondary-action icon-action" type="button" data-project-previous aria-label="Previous group" disabled><img src="/icons/arrow-left.svg" alt="" /></button>
-            <button class="primary-action compact" type="button" data-project-next>Next group <img src="/icons/arrow-right.svg" alt="" /></button>
-          </div>
         </section>
 
-        <section class="app-view voting-view" id="view-vote" data-app-view="vote" aria-labelledby="vote-view-title" hidden>
+        <section class="app-view voting-view" id="view-vote" data-app-view="vote" aria-labelledby="vote-view-title">
           <form class="ballot" data-vote-form data-csrf="<%= csrfToken || '' %>" data-vote-submitted="<%= pageState === 'VOTED' ? 'true' : 'false' %>">
             <header class="award-heading">
               <span class="award-badge"><img src="/icons/trophy.svg" alt="" /></span>
@@ -134,10 +151,19 @@
         </section>
       </main>
 
+      <div class="vote-success-overlay" data-vote-success hidden role="status" aria-live="assertive" aria-atomic="true">
+        <div class="vote-success-card">
+          <div class="vote-success-icon"><img src="/icons/check.svg" alt="" /></div>
+          <span class="eyebrow">People's Choice Award</span>
+          <h2>Vote recorded</h2>
+          <p>Your choice was submitted successfully.</p>
+        </div>
+      </div>
+
       <nav class="app-navigation" aria-label="Voting website sections">
-        <button type="button" data-app-nav="show" data-view-target="show" aria-current="page"><img src="/icons/info.svg" alt="" /><span>Show</span></button>
+        <button type="button" data-app-nav="vote" data-view-target="vote" aria-current="page"><img src="/icons/trophy.svg" alt="" /><span>Vote</span></button>
         <button type="button" data-app-nav="projects" data-view-target="projects"><img src="/icons/images.svg" alt="" /><span>Groups</span></button>
-        <button type="button" data-app-nav="vote" data-view-target="vote"><img src="/icons/trophy.svg" alt="" /><span>Vote</span></button>
+        <button type="button" data-app-nav="show" data-view-target="show"><img src="/icons/info.svg" alt="" /><span>Show</span></button>
       </nav>
       <script src="/assets/js/public-vote.js" defer></script>
     <% } %>
