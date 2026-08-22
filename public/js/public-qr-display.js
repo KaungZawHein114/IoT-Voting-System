@@ -10,14 +10,17 @@ if (display) {
   const votedCount = display.querySelector("[data-voted-count]");
   const closeButton = display.querySelector("[data-close-voting]");
 
+  const QR_TTL_MS = 30000;
+  // Never swap the visible QR faster than this, no matter what triggers a
+  // refresh attempt.
+  const MIN_DISPLAY_MS = 4000;
+  const HEARTBEAT_MS = 250;
+
   let currentTokenId;
   let expiresAt = 0;
-  let timer;
-  let creatingToken = false;
   let lastShownAt = 0;
-  // Hard floor: whatever triggers a refresh, the visible QR can never be
-  // replaced faster than this — the actual fix for "flashing too fast to shoot".
-  const MIN_DISPLAY_MS = 4000;
+  let requestInFlight = false;
+  let unavailableUntil = 0;
 
   const responseData = async (response) => {
     const data = await response.json().catch(() => ({}));
@@ -30,11 +33,6 @@ if (display) {
     votedCount.textContent = stats.votedCount ?? votedCount.textContent;
   };
 
-  const schedule = (callback, delay) => {
-    window.clearTimeout(timer);
-    timer = window.setTimeout(callback, delay);
-  };
-
   const showUnavailable = (text) => {
     currentTokenId = undefined;
     image.removeAttribute("src");
@@ -44,22 +42,19 @@ if (display) {
     state.textContent = "Voting unavailable";
     message.textContent = "Open voting from the Public IoT Show control page.";
     progress.style.width = "0%";
+    unavailableUntil = Date.now() + 2000;
   };
 
+  // A single request is ever in flight at a time (createToken or pollToken),
+  // and both are driven only by the heartbeat below — nothing else (no
+  // visibility events, no chained timers) can trigger a fetch, so the QR
+  // can never rotate faster than MIN_DISPLAY_MS regardless of environment
+  // quirks (multi-monitor, remote display, screen capture, etc.).
   const createToken = async () => {
-    if (creatingToken || document.hidden) return;
+    if (requestInFlight) return;
+    if (lastShownAt && Date.now() - lastShownAt < MIN_DISPLAY_MS) return;
 
-    // Never swap the visible QR faster than MIN_DISPLAY_MS, no matter what
-    // triggered this call — refuses to "flash" even if something upstream
-    // is asking for a refresh too often.
-    if (lastShownAt) {
-      const sinceLastShown = Date.now() - lastShownAt;
-      if (sinceLastShown < MIN_DISPLAY_MS) {
-        return schedule(createToken, MIN_DISPLAY_MS - sinceLastShown);
-      }
-    }
-
-    creatingToken = true;
+    requestInFlight = true;
     loading.hidden = false;
     loading.textContent = "Preparing secure QR code...";
     image.classList.remove("visible");
@@ -83,22 +78,21 @@ if (display) {
       message.textContent =
         "Scan the current code to receive one voting session.";
       updateStats(data.stats);
-      schedule(pollToken, 250);
     } catch (error) {
       showUnavailable(error.message);
-      schedule(createToken, 2000);
     } finally {
-      creatingToken = false;
+      requestInFlight = false;
     }
   };
 
   const pollToken = async () => {
-    if (!currentTokenId || document.hidden) return;
+    if (requestInFlight || !currentTokenId) return;
     // Progress bar only — the rotation decision below never trusts the
     // client's own clock, only the server's claimed/expired verdict.
     const remaining = Math.max(expiresAt - Date.now(), 0);
-    progress.style.width = `${Math.min((remaining / 30000) * 100, 100)}%`;
+    progress.style.width = `${Math.min((remaining / QR_TTL_MS) * 100, 100)}%`;
 
+    requestInFlight = true;
     try {
       const data = await responseData(
         await fetch(
@@ -109,29 +103,35 @@ if (display) {
       updateStats(data.stats);
       if (!data.open) {
         showUnavailable("Voting is not open");
-        return schedule(createToken, 2000);
+        return;
       }
       if (data.claimed || data.expired) {
         currentTokenId = undefined;
-        return createToken();
       }
-      schedule(pollToken, 250);
     } catch (error) {
       message.textContent = error.message;
-      schedule(pollToken, 1000);
+    } finally {
+      requestInFlight = false;
     }
   };
 
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) return;
-    // Resume the existing token instead of discarding a still-valid QR every
-    // time the tab regains focus (e.g. switching away to take a screenshot).
+  // Single steady heartbeat — deliberately not tied to visibilitychange.
+  // Chained setTimeout-plus-"resume on visibility" designs are fragile: any
+  // environment that fires visibilitychange more than once per real tab
+  // switch (multi-monitor, remote/projector display, screen capture, etc.)
+  // ends up re-triggering the resume path repeatedly. A plain interval that
+  // just checks current state every tick has no such trigger to misfire.
+  const heartbeat = () => {
+    if (Date.now() < unavailableUntil) return;
     if (currentTokenId) {
       pollToken();
     } else {
       createToken();
     }
-  });
+  };
+
+  setInterval(heartbeat, HEARTBEAT_MS);
+  heartbeat();
 
   const verifyDialog = document.querySelector("#admin-verify-dialog");
   const verifyForm = document.querySelector("#admin-verify-form");
@@ -200,6 +200,4 @@ if (display) {
   });
 
   closeButton?.addEventListener("click", () => openVerifyDialog());
-
-  createToken();
 }
