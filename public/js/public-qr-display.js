@@ -17,7 +17,7 @@ if (display) {
   const HEARTBEAT_MS = 250;
 
   let currentTokenId;
-  let expiresAt = 0;
+  let displayExpiresAt = 0;
   let lastShownAt = 0;
   let requestInFlight = false;
   let unavailableUntil = 0;
@@ -69,7 +69,9 @@ if (display) {
         }),
       );
       currentTokenId = data.publicId;
-      expiresAt = new Date(data.expiresAt).getTime();
+      // The display rotates at 30 seconds. The server keeps the underlying
+      // link valid for a short grace period after it disappears from screen.
+      displayExpiresAt = new Date(data.displayExpiresAt).getTime();
       lastShownAt = Date.now();
       image.src = data.qrImage;
       image.classList.add("visible");
@@ -87,10 +89,15 @@ if (display) {
 
   const pollToken = async () => {
     if (requestInFlight || !currentTokenId) return;
-    // Progress bar only — the rotation decision below never trusts the
-    // client's own clock, only the server's claimed/expired verdict.
-    const remaining = Math.max(expiresAt - Date.now(), 0);
+    const remaining = Math.max(displayExpiresAt - Date.now(), 0);
     progress.style.width = `${Math.min((remaining / QR_TTL_MS) * 100, 100)}%`;
+
+    // Stop displaying this QR after 30 seconds even though the server accepts
+    // its link for five more seconds as a scan/admission grace period.
+    if (remaining === 0) {
+      currentTokenId = undefined;
+      return;
+    }
 
     requestInFlight = true;
     try {

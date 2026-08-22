@@ -28,7 +28,10 @@ const {
 } = require("../services/votingTokenService");
 
 const SESSION_COOKIE = "publicVoteSession";
-const QR_TOKEN_TTL_MS = 30000;
+// Rotate the visible QR after 30 seconds, but keep its link valid for another
+// 5 seconds so visitors who scan near the end of the countdown can still enter.
+const QR_DISPLAY_TTL_MS = 30000;
+const QR_TOKEN_TTL_MS = 35000;
 // How long a re-entered admin password unlocks the sensitive actions below —
 // long enough to cover one show without repeat prompts, short enough to expire on its own.
 const ADMIN_ACTION_TTL_MS = 6 * 60 * 60 * 1000;
@@ -218,7 +221,9 @@ exports.createQrToken = catchAsync(async (req, res, next) => {
 
   const rawToken = randomToken();
   const publicId = crypto.randomUUID();
-  const expiresAt = new Date(Date.now() + QR_TOKEN_TTL_MS);
+  const createdAt = Date.now();
+  const displayExpiresAt = new Date(createdAt + QR_DISPLAY_TTL_MS);
+  const expiresAt = new Date(createdAt + QR_TOKEN_TTL_MS);
 
   await PublicQrAccessToken.create({
     publicId,
@@ -240,7 +245,7 @@ exports.createQrToken = catchAsync(async (req, res, next) => {
   setNoStoreHeaders(res);
   res.status(201).json({
     status: "success",
-    data: { publicId, expiresAt, qrImage, stats },
+    data: { publicId, displayExpiresAt, expiresAt, qrImage, stats },
   });
 });
 
