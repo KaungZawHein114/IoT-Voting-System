@@ -28,7 +28,7 @@ const {
 } = require("../services/votingTokenService");
 
 const SESSION_COOKIE = "publicVoteSession";
-const QR_TOKEN_TTL_MS = 5000;
+const QR_TOKEN_TTL_MS = 30000;
 // How long a re-entered admin password unlocks the sensitive actions below —
 // long enough to cover one show without repeat prompts, short enough to expire on its own.
 const ADMIN_ACTION_TTL_MS = 6 * 60 * 60 * 1000;

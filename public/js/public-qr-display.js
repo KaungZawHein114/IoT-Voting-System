@@ -14,6 +14,10 @@ if (display) {
   let expiresAt = 0;
   let timer;
   let creatingToken = false;
+  let lastShownAt = 0;
+  // Hard floor: whatever triggers a refresh, the visible QR can never be
+  // replaced faster than this — the actual fix for "flashing too fast to shoot".
+  const MIN_DISPLAY_MS = 4000;
 
   const responseData = async (response) => {
     const data = await response.json().catch(() => ({}));
@@ -44,6 +48,17 @@ if (display) {
 
   const createToken = async () => {
     if (creatingToken || document.hidden) return;
+
+    // Never swap the visible QR faster than MIN_DISPLAY_MS, no matter what
+    // triggered this call — refuses to "flash" even if something upstream
+    // is asking for a refresh too often.
+    if (lastShownAt) {
+      const sinceLastShown = Date.now() - lastShownAt;
+      if (sinceLastShown < MIN_DISPLAY_MS) {
+        return schedule(createToken, MIN_DISPLAY_MS - sinceLastShown);
+      }
+    }
+
     creatingToken = true;
     loading.hidden = false;
     loading.textContent = "Preparing secure QR code...";
@@ -60,6 +75,7 @@ if (display) {
       );
       currentTokenId = data.publicId;
       expiresAt = new Date(data.expiresAt).getTime();
+      lastShownAt = Date.now();
       image.src = data.qrImage;
       image.classList.add("visible");
       loading.hidden = true;
@@ -78,8 +94,10 @@ if (display) {
 
   const pollToken = async () => {
     if (!currentTokenId || document.hidden) return;
+    // Progress bar only — the rotation decision below never trusts the
+    // client's own clock, only the server's claimed/expired verdict.
     const remaining = Math.max(expiresAt - Date.now(), 0);
-    progress.style.width = `${Math.min((remaining / 5000) * 100, 100)}%`;
+    progress.style.width = `${Math.min((remaining / 30000) * 100, 100)}%`;
 
     try {
       const data = await responseData(
@@ -93,7 +111,7 @@ if (display) {
         showUnavailable("Voting is not open");
         return schedule(createToken, 2000);
       }
-      if (data.claimed || data.expired || remaining === 0) {
+      if (data.claimed || data.expired) {
         currentTokenId = undefined;
         return createToken();
       }
