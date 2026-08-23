@@ -10,7 +10,7 @@ if (display) {
   const votedCount = display.querySelector("[data-voted-count]");
   const closeButton = display.querySelector("[data-close-voting]");
 
-  const QR_TTL_MS = 10000;
+  const QR_TTL_MS = 20000;
   // Never swap the visible QR faster than this, no matter what triggers a
   // refresh attempt.
   const MIN_DISPLAY_MS = 1000;
@@ -113,7 +113,7 @@ if (display) {
         }),
       );
       currentTokenId = data.publicId;
-      // The display rotates at 10 seconds. The server keeps the underlying
+      // The display rotates at 20 seconds. The server keeps the underlying
       // link valid for a short grace period after it disappears from screen.
       displayExpiresAt = new Date(data.displayExpiresAt).getTime();
       lastShownAt = Date.now();
