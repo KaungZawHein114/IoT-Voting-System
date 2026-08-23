@@ -17,6 +17,7 @@ router.get(
   publicShowController.getQrTokenStatus,
 );
 router.get("/results", publicShowController.getResultsSummary);
+router.post("/reset-votes", publicShowController.resetVotes);
 router.get("/groups", publicShowController.listGroups);
 router.patch("/groups/:id", publicShowController.updateGroup);
 router.post("/groups/sync", publicShowController.syncGroups);

@@ -69,6 +69,13 @@
               <div><strong>Live QR display</strong><span>Shows the rotating one-use access QR and live visitor totals — put this on the projector.</span></div>
               <a class="button secondary <%= state === 'OPEN' ? '' : 'disabled-link' %>" href="<%= state === 'OPEN' ? '/admin/public-show/qr-display' : '#' %>"><img src="/icons/qr-code.svg" alt="" /> Open QR display</a>
             </div>
+
+            <div class="control-action-row">
+              <div><strong>Reset test data</strong><span>Deletes every vote, voting session, and QR link so you can run a clean test round. Groups and the open/closed state are kept. Cannot be undone.</span></div>
+              <div class="inline-actions">
+                <button class="button danger" type="button" data-reset-votes-gated><img src="/icons/trash-2.svg" alt="" /> Reset votes</button>
+              </div>
+            </div>
           </div>
         </section>
       </section>

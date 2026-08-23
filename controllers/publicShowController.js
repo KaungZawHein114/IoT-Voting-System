@@ -280,6 +280,30 @@ exports.getResultsSummary = catchAsync(async (req, res, next) => {
   res.status(200).json({ status: "success", data: { results, totalVotes } });
 });
 
+// POST /api/v1/public-show/reset-votes — destructive, so gated the same way
+// as closing voting. Wipes every vote, session, and QR link so a clean test
+// round (or the real show) can start from zero. Groups and the open/closed
+// state are left untouched.
+exports.resetVotes = catchAsync(async (req, res, next) => {
+  if (!requireAdminActionToken(req, next)) return;
+
+  const [{ deletedCount: votesDeleted }, { deletedCount: sessionsDeleted }, { deletedCount: tokensDeleted }] =
+    await Promise.all([
+      PublicVote.deleteMany({}),
+      PublicVotingSession.deleteMany({}),
+      PublicQrAccessToken.deleteMany({}),
+    ]);
+
+  const show = await getOrCreateShow();
+  show.votingGeneration = (show.votingGeneration || 0) + 1;
+  await show.save();
+
+  res.status(200).json({
+    status: "success",
+    data: { votesDeleted, sessionsDeleted, tokensDeleted },
+  });
+});
+
 // GET /api/v1/public-show/groups
 exports.listGroups = catchAsync(async (req, res) => {
   const groups = await getAllGroups();

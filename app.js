@@ -48,7 +48,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.use("/assets", express.static(path.join(__dirname, "public")));
+app.use(
+  "/assets",
+  express.static(path.join(__dirname, "public"), {
+    // A browser holding a stale cached copy of a JS/CSS file after a fix
+    // ships is indistinguishable from the bug still being present — force
+    // a fresh fetch every time rather than let any device serve an old copy.
+    setHeaders: (res) => {
+      res.set("Cache-Control", "no-store, max-age=0");
+    },
+  }),
+);
 app.use(
   "/icons",
   express.static(path.join(__dirname, "node_modules", "lucide-static", "icons")),

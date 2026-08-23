@@ -160,3 +160,37 @@ document.querySelector("[data-close-voting-gated]")?.addEventListener("click", (
     }
   });
 });
+
+/* ---------- Reset test data: destructive, double-gated ---------- */
+
+document.querySelector("[data-reset-votes-gated]")?.addEventListener("click", () => {
+  if (
+    !window.confirm(
+      "Reset all test data? This permanently deletes every vote, voting session, and QR link. Groups and the open/closed state are kept. This cannot be undone.",
+    )
+  ) {
+    return;
+  }
+
+  openVerifyDialog(async (token) => {
+    try {
+      const response = await fetch("/api/v1/public-show/reset-votes", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Admin-Action": token,
+        },
+        body: "{}",
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || "Could not reset votes");
+      window.alert(
+        `Reset complete: ${data.data.votesDeleted} vote(s), ${data.data.sessionsDeleted} session(s), ${data.data.tokensDeleted} QR link(s) removed.`,
+      );
+      window.location.reload();
+    } catch (error) {
+      window.alert(error.message);
+    }
+  });
+});
