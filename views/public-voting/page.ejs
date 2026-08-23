@@ -108,10 +108,9 @@
                     <%= pageState === 'VOTED' ? 'Review your ballot' : 'Choose this group' %> <img src="/icons/<%= pageState === 'VOTED' ? 'arrow-right' : 'trophy' %>.svg" alt="" />
                   </button>
                 </div>
-                <a class="project-poster" href="<%= encodeURI(fullPosterImage) %>" target="_blank" rel="noopener" aria-label="Open the full <%= group.title %> project poster">
+                <div class="project-poster">
                   <img src="<%= encodeURI(fullPosterImage) %>" alt="<%= group.title %> project poster" loading="lazy" decoding="async" />
-                  <span>Tap to open the full poster <span aria-hidden="true">↗</span></span>
-                </a>
+                </div>
               </article>
             <% }) %>
           </div>
