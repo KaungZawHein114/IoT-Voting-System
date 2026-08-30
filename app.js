@@ -38,7 +38,11 @@ app.locals.statusClass = (status) =>
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://iot-voting-frontend.vercel.app",
+      process.env.FRONTEND_URL || "",
+    ].filter(Boolean),
     credentials: true,
   }),
 );
@@ -61,7 +65,9 @@ app.use(
 );
 app.use(
   "/icons",
-  express.static(path.join(__dirname, "node_modules", "lucide-static", "icons")),
+  express.static(
+    path.join(__dirname, "node_modules", "lucide-static", "icons"),
+  ),
 );
 
 // Development logging

@@ -5,10 +5,10 @@
   "main": "index.js",
   "scripts": {
     "create:academic-head": "node scripts/createAcademicHead.js",
-    "reset:public-votes": "NODE_ENV=development node scripts/resetPublicVotes.js",
-    "reset:public-votes:atlas": "NODE_ENV=production node scripts/resetPublicVotes.js",
-    "dev": "NODE_ENV=development nodemon server.js",
-    "prod": "NODE_ENV=production node server.js",
+    "reset:public-votes": "cross-env NODE_ENV=development node scripts/resetPublicVotes.js",
+    "reset:public-votes:atlas": "cross-env NODE_ENV=production node scripts/resetPublicVotes.js",
+    "dev": "cross-env NODE_ENV=development nodemon server.js",
+    "prod": "cross-env NODE_ENV=production node server.js",
     "test": "node --test"
   },
   "repository": {
@@ -40,6 +40,7 @@
     "validator": "^13.12.0"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "nodemon": "^3.1.14"
   }
 }
