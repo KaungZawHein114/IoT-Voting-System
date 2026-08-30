@@ -14,22 +14,30 @@ const {
   startProjectStatusScheduler,
   stopProjectStatusScheduler,
 } = require("./services/projectStatusScheduler");
-const {
-  cleanupLegacyVoteIndexes,
-} = require("./services/votingIndexService");
+const { cleanupLegacyVoteIndexes } = require("./services/votingIndexService");
 
 let databaseConnection;
 
-if (process.env.NODE_ENV === "development") {
-  databaseConnection = process.env.DATABASE_LOCAL;
-  console.log("Using local MongoDB");
-} else {
+if (process.env.NODE_ENV === "production") {
+  if (!process.env.DATABASE || !process.env.DATABASE_PASSWORD) {
+    throw new Error(
+      "DATABASE and DATABASE_PASSWORD must be set for production mode.",
+    );
+  }
+
   databaseConnection = process.env.DATABASE.replace(
     "<db_password>",
     encodeURIComponent(process.env.DATABASE_PASSWORD),
   );
 
   console.log("Using MongoDB Atlas");
+} else {
+  if (!process.env.DATABASE_LOCAL) {
+    throw new Error("DATABASE_LOCAL must be set for development mode.");
+  }
+
+  databaseConnection = process.env.DATABASE_LOCAL;
+  console.log("Using local MongoDB");
 }
 
 let server;

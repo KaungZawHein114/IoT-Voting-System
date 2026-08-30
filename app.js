@@ -10,6 +10,7 @@ const projectRouter = require("./routes/projectRoutes");
 const groupRouter = require("./routes/groupRoutes");
 const votingApiRouter = require("./routes/votingApiRoutes");
 const votingViewRouter = require("./routes/votingViewRoutes");
+const publicProjectRouter = require("./routes/publicProjectRoutes");
 const publicShowRouter = require("./routes/publicShowRoutes");
 const publicVotingApiRouter = require("./routes/publicVotingApiRoutes");
 const publicVotingViewRouter = require("./routes/publicVotingViewRoutes");
@@ -90,6 +91,7 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/projects", projectRouter);
 app.use("/api/v1/groups", groupRouter);
 app.use("/api/v1/voting", votingApiRouter);
+app.use("/api/v1/public/projects", publicProjectRouter);
 app.use("/api/v1/public-show", publicShowRouter);
 app.use("/api/v1/public-voting", publicVotingApiRouter);
 

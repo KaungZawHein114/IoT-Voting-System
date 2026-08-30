@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "cross-env NODE_ENV=development nodemon server.js",
     "create:academic-head": "node scripts/createAcademicHead.js",
     "reset:public-votes": "cross-env NODE_ENV=development node scripts/resetPublicVotes.js",
     "reset:public-votes:atlas": "cross-env NODE_ENV=production node scripts/resetPublicVotes.js",

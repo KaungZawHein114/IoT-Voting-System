@@ -28,6 +28,7 @@ const voteLimiter = rateLimit({
 });
 
 router.post("/:batch/admit", admissionLimiter, votingController.claimAdmission);
+router.get("/:batch/ballot", votingController.getBallot);
 router.post("/:batch/votes", voteLimiter, votingController.submitVote);
 
 module.exports = router;

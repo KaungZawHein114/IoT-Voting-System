@@ -23,6 +23,11 @@ const {
   randomToken,
   validCsrfToken,
 } = require("../services/votingTokenService");
+const {
+  serializeCategory,
+  serializeGroup,
+  serializeProjectSummary,
+} = require("../utils/publicSerializers");
 
 const SESSION_COOKIE = "voteSession";
 const QR_TOKEN_TTL_MS = 30000;
@@ -40,10 +45,18 @@ const setNoStoreHeaders = (res) => {
   res.set("Referrer-Policy", "no-referrer");
 };
 
+// The React frontend runs on a different origin (Vercel) than this API
+// (Render), so the session cookie must be sent cross-site. SameSite=None
+// requires Secure, which is only valid over HTTPS — in local/non-production
+// dev, frontend and backend both run on `localhost` (same site regardless of
+// port), so Lax already works there and we keep it to avoid requiring HTTPS
+// locally.
+const crossSiteCookie = process.env.NODE_ENV === "production";
+
 const sessionCookieOptions = () => ({
   httpOnly: true,
-  sameSite: "lax",
-  secure: process.env.NODE_ENV === "production",
+  sameSite: crossSiteCookie ? "none" : "lax",
+  secure: crossSiteCookie,
   maxAge: VOTING_SESSION_TTL_MS,
   path: "/",
 });
@@ -51,18 +64,23 @@ const sessionCookieOptions = () => ({
 const clearSessionCookie = (res) => {
   res.clearCookie(SESSION_COOKIE, {
     httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    sameSite: crossSiteCookie ? "none" : "lax",
+    secure: crossSiteCookie,
     path: "/",
   });
 };
 
-const getPublicBaseUrl = (req) => {
-  const configuredUrl = String(process.env.PUBLIC_BASE_URL || "").replace(
+// Where the QR code should send voters: the React frontend's `/welcome/:batch`
+// route, not this server's own EJS admission page.
+const getFrontendBaseUrl = () => {
+  const configuredUrl = String(process.env.FRONTEND_URL || "").replace(
     /\/$/,
     "",
   );
-  return configuredUrl || `${req.protocol}://${req.get("host")}`;
+  if (configuredUrl) return configuredUrl;
+  return process.env.NODE_ENV === "production"
+    ? "https://iot-voting-frontend.vercel.app"
+    : "http://localhost:5173";
 };
 
 const ensureControlAccess = (project, user) => {
@@ -290,7 +308,7 @@ exports.createQrToken = catchAsync(async (req, res, next) => {
     expiresAt,
   });
 
-  const admissionUrl = `${getPublicBaseUrl(req)}/vote/${project.batch}/admit#${rawToken}`;
+  const admissionUrl = `${getFrontendBaseUrl()}/welcome/${project.batch}#${rawToken}`;
   const [qrImage, stats] = await Promise.all([
     QRCode.toDataURL(admissionUrl, {
       errorCorrectionLevel: "M",
@@ -518,6 +536,68 @@ exports.renderVotingPage = catchAsync(async (req, res) => {
     categories: context.readiness.categories,
     csrfToken: createCsrfToken(rawToken),
     splashKey: hashToken(`voting-pass:${rawToken}`).slice(0, 24),
+  });
+});
+
+// GET /api/v1/voting/:batch/ballot
+// JSON counterpart to renderVotingPage, for the React voting flow.
+exports.getBallot = catchAsync(async (req, res) => {
+  const project = await findProjectByBatch(req.params.batch);
+  const { rawToken, session, belongsToAnotherProject } =
+    await findBrowserSession(req, project);
+  setNoStoreHeaders(res);
+
+  const sendState = (pageState, statusCode = 200) =>
+    res.status(statusCode).json({
+      status: "success",
+      data: {
+        pageState,
+        project: serializeProjectSummary(project),
+        groups: [],
+        categories: [],
+        csrfToken: null,
+      },
+    });
+
+  if (!rawToken || !session) {
+    if (!belongsToAnotherProject) clearSessionCookie(res);
+    return sendState("NO_ACCESS", 403);
+  }
+
+  const existingVote = await Vote.exists({ votingSession: session._id });
+  if (session.status === "VOTED" || existingVote) {
+    if (session.status !== "VOTED") {
+      await VotingSession.updateOne(
+        { _id: session._id },
+        { status: "VOTED", votedAt: new Date() },
+      );
+    }
+    return sendState("VOTED");
+  }
+
+  if (
+    session.expiresAt <= new Date() ||
+    session.votingGeneration !== (project.projectShow.votingGeneration || 0)
+  ) {
+    clearSessionCookie(res);
+    return sendState("EXPIRED", 403);
+  }
+
+  const context = await getProjectVotingContext(project);
+  if (context.state !== VOTING_STATES.VOTING_OPEN) {
+    return sendState("CLOSED");
+  }
+
+  await syncProjectStatus(project);
+  return res.status(200).json({
+    status: "success",
+    data: {
+      pageState: "OPEN",
+      project: serializeProjectSummary(project),
+      groups: context.readiness.activeGroups.map(serializeGroup),
+      categories: context.readiness.categories.map(serializeCategory),
+      csrfToken: createCsrfToken(rawToken),
+    },
   });
 });
 
