@@ -28,10 +28,10 @@ const {
 } = require("../services/votingTokenService");
 
 const SESSION_COOKIE = "publicVoteSession";
-// Rotate the visible QR after 10 seconds, but keep its link valid for another
-// 5 seconds so visitors who scan near the end of the countdown can still enter.
-const QR_DISPLAY_TTL_MS = 10000;
-const QR_TOKEN_TTL_MS = 15000;
+// Rotate the visible QR after 30 seconds, but keep its link valid for another
+// 10 seconds so visitors who scan near the end of the countdown can still enter.
+const QR_DISPLAY_TTL_MS = 30000;
+const QR_TOKEN_TTL_MS = 40000;
 // How long a re-entered admin password unlocks the sensitive actions below —
 // long enough to cover one show without repeat prompts, short enough to expire on its own.
 const ADMIN_ACTION_TTL_MS = 6 * 60 * 60 * 1000;

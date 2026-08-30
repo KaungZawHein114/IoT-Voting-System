@@ -86,9 +86,7 @@
 .project-poster {
   display: block;
   padding: 10px;
-  color: white;
   background: #101315;
-  text-decoration: none;
 }
 
 .project-poster > img {
@@ -97,18 +95,6 @@
   height: auto;
   border-radius: 5px;
   background: #080a0b;
-}
-
-.project-poster > span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 10px 4px 2px;
-  color: #d9dfe1;
-  font-size: 11px;
-  font-weight: 750;
-  text-transform: uppercase;
 }
 
 .projects-view .project-content {
@@ -377,15 +363,10 @@
 .group-focus-mode .project-poster {
   padding: 0;
   background: #080a0b;
-  cursor: zoom-in;
 }
 
 .group-focus-mode .project-poster > img {
   border-radius: 0;
-}
-
-.group-focus-mode .project-poster > span {
-  display: none;
 }
 
 .group-focus-mode .group-tour-toolbar {
