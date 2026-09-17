@@ -202,12 +202,6 @@ exports.unpublishProjectShow = catchAsync(async (req, res, next) => {
     return sendControlResponse(res, project);
   }
 
-  const state = resolveVotingState(project);
-  if (state === VOTING_STATES.VOTING_OPEN || project.status === "ACTIVE") {
-    return next(
-      new AppError("Stop voting before unpublishing the project show", 400),
-    );
-  }
   if (project.status === "COMPLETED") {
     return next(
       new AppError("A completed project show cannot be unpublished", 400),

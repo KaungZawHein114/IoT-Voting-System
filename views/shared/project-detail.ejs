@@ -124,8 +124,8 @@
               <div class="inline-actions">
                 <% if (!show.isPublished) { %>
                   <form data-api-form data-endpoint="/api/v1/projects/<%= project._id %>/publish" data-method="POST" data-success="Project show published" data-redirect="reload" data-confirm="Publish this project show and enable its voting schedule?"><button class="button primary" type="submit" <%= votingControl.readiness.ready ? '' : 'disabled' %>><img src="/icons/send.svg" alt="" /> Publish project show</button></form>
-                <% } else if (votingControl.state !== 'VOTING_OPEN' && project.status !== 'COMPLETED') { %>
-                  <form data-api-form data-endpoint="/api/v1/projects/<%= project._id %>/unpublish" data-method="POST" data-success="Project show unpublished" data-redirect="reload" data-confirm="Unpublish this project show?"><button class="button secondary" type="submit"><img src="/icons/eye-off.svg" alt="" /> Unpublish</button></form>
+                <% } else if (project.status !== 'COMPLETED') { %>
+                  <form data-api-form data-endpoint="/api/v1/projects/<%= project._id %>/unpublish" data-method="POST" data-success="Project returned to draft" data-redirect="reload" data-confirm="Stop voting and return this project to draft? Active voting sessions will lose access."><button class="button secondary" type="submit"><img src="/icons/eye-off.svg" alt="" /> <%= project.status === 'ACTIVE' ? 'Make draft' : 'Unpublish' %></button></form>
                 <% } %>
               </div>
             </div>
