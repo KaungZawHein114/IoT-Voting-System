@@ -221,6 +221,24 @@ exports.unpublishProjectShow = catchAsync(async (req, res, next) => {
   await sendControlResponse(res, project);
 });
 
+// POST /api/v1/projects/:id/reset-votes
+exports.resetProjectVotes = catchAsync(async (req, res) => {
+  const project = await findProjectById(req.params.id);
+  ensureControlAccess(project, req.user);
+
+  await Promise.all([
+    Vote.deleteMany({ project: project._id }),
+    VotingSession.deleteMany({ project: project._id }),
+    QrAccessToken.deleteMany({ project: project._id }),
+  ]);
+
+  project.projectShow.votingGeneration =
+    (project.projectShow.votingGeneration || 0) + 1;
+  await project.save();
+
+  await sendControlResponse(res, project);
+});
+
 // PATCH /api/v1/projects/:id/voting-mode
 exports.updateVotingMode = catchAsync(async (req, res, next) => {
   const project = await findProjectById(req.params.id);

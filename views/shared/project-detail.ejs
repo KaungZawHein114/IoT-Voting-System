@@ -146,6 +146,11 @@
             </div>
 
             <div class="control-action-row">
+              <div><strong>Reset votes</strong><span>Removes all submitted votes, visitor sessions, and QR access for this project.</span></div>
+              <form data-api-form data-endpoint="/api/v1/projects/<%= project._id %>/reset-votes" data-method="POST" data-success="All project votes reset" data-redirect="reload" data-confirm="Reset every vote for this project? This will remove all submitted votes and voting sessions."><button class="button danger" type="submit"><img src="/icons/trash-2.svg" alt="" /> Reset all votes</button></form>
+            </div>
+
+            <div class="control-action-row">
               <div><strong>Live QR display</strong><span>Shows the rotating one-use access QR and live visitor totals.</span></div>
               <a class="button secondary <%= votingControl.state === 'VOTING_OPEN' ? '' : 'disabled-link' %>" href="<%= votingControl.state === 'VOTING_OPEN' ? `${basePath}/projects/${project._id}/qr-display` : '#' %>"><img src="/icons/qr-code.svg" alt="" /> Open QR display</a>
             </div>

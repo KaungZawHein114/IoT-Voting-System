@@ -23,6 +23,11 @@ router.post(
   authController.restrictTo("ADMIN", "MANAGER"),
   votingController.unpublishProjectShow,
 );
+router.post(
+  "/:id/reset-votes",
+  authController.restrictTo("ADMIN", "MANAGER"),
+  votingController.resetProjectVotes,
+);
 router.patch(
   "/:id/voting-mode",
   authController.restrictTo("ADMIN", "MANAGER"),
