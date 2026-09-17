@@ -11,6 +11,7 @@ const {
   getVotingStats,
   resolveVotingState,
 } = require("../services/votingService");
+const { countDuplicateVoters } = require("../services/voteReviewService");
 
 const OPEN_PROJECT_STATUSES = ["DRAFT", "ACTIVE"];
 
@@ -249,15 +250,26 @@ exports.projectResults = catchAsync(async (req, res, next) => {
     ]),
   );
 
+  // Flags votes that share the same (normalized) name + batch, so reviewers
+  // don't have to eyeball the whole list to spot repeats.
+  const duplicateCounts = countDuplicateVoters(
+    votes.map((vote) => ({
+      voterName: vote.voterName,
+      batchType: vote.batchType,
+      batchNumber: vote.batchNumber,
+    })),
+  );
+
   // Individual votes, for manual post-event review — not shown as part of
   // the aggregated tallies above.
-  const voteRows = votes.map((vote) => ({
+  const voteRows = votes.map((vote, index) => ({
     id: vote._id,
     voterName: vote.voterName || "—",
     batchType: vote.batchType || null,
     batchNumber: vote.batchNumber ?? null,
     createdAt: vote.createdAt,
     admittedAt: vote.votingSession?.admittedAt || null,
+    duplicateCount: duplicateCounts[index],
     selections: vote.selections.map((selection) => ({
       category: categoryNameById.get(selection.votingCategory?.toString()) || "Unknown category",
       group: selection.group

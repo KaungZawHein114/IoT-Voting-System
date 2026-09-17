@@ -40,7 +40,7 @@
         <div class="panel-header">
           <div>
             <h3>Individual votes</h3>
-            <span class="cell-secondary">For manual review — remove any vote that looks suspicious. This cannot be undone.</span>
+            <span class="cell-secondary">For manual review — votes sharing the same name and batch are flagged below. Remove any vote that looks suspicious; this cannot be undone.</span>
           </div>
         </div>
         <% if (voteRows.length) { %>
@@ -54,9 +54,15 @@
                   const batchLabel = vote.batchType ? `${vote.batchType}-${vote.batchNumber}` : '—';
                   const selectionsLabel = vote.selections.map(s => `${s.category}: ${s.group}`).join('; ');
                   const confirmMessage = `Delete this vote?\n\nVoter: ${vote.voterName}\nBatch: ${batchLabel}\nSelections: ${selectionsLabel}\n\nThis action cannot be undone.`;
+                  const isDuplicate = vote.duplicateCount > 1;
                 %>
-                  <tr>
-                    <td class="cell-primary"><%= vote.voterName %></td>
+                  <tr class="<%= isDuplicate ? 'vote-row--duplicate' : '' %>">
+                    <td class="cell-primary">
+                      <%= vote.voterName %>
+                      <% if (isDuplicate) { %>
+                        <span class="status-badge status-draft" title="<%= vote.duplicateCount %> votes share this name and batch">Possible duplicate (<%= vote.duplicateCount %>x)</span>
+                      <% } %>
+                    </td>
                     <td><%= batchLabel %></td>
                     <td class="cell-secondary"><%= selectionsLabel %></td>
                     <td class="cell-secondary"><%= new Date(vote.createdAt).toLocaleString() %></td>

@@ -902,6 +902,11 @@ dialog::backdrop {
   line-height: 1.55;
 }
 
+/* Individual-votes review table: flags rows sharing the same name + batch. */
+.vote-row--duplicate td {
+  background: var(--warning-soft);
+}
+
 .toast {
   position: fixed;
   right: 22px;
