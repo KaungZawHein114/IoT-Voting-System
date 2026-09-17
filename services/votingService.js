@@ -83,7 +83,7 @@ const getVotingReadiness = (project, groups = []) => {
     missing.push("Every active group needs a title, description, and members");
   }
 
-  if (categories.length < 2) missing.push("At least 2 voting categories");
+  if (categories.length < 1) missing.push("At least 1 voting category");
   if (
     categories.some(
       (category) =>

@@ -60,6 +60,16 @@ test("publishing readiness requires two complete groups and categories", () => {
   assert.equal(ready.ready, true);
   assert.deepEqual(ready.missing, []);
 
+  const oneCategoryProject = completeProject();
+  oneCategoryProject.projectShow.votingCategories = [
+    oneCategoryProject.projectShow.votingCategories[0],
+  ];
+  const oneCategoryReadiness = getVotingReadiness(
+    oneCategoryProject,
+    completeGroups(),
+  );
+  assert.equal(oneCategoryReadiness.ready, true);
+
   const incomplete = getVotingReadiness(completeProject(), [
     completeGroups()[0],
   ]);
