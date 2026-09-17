@@ -1,6 +1,7 @@
 const Group = require("../models/groupModel");
 const Project = require("../models/projectModel");
 const User = require("../models/userModel");
+const Vote = require("../models/voteModel");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const {
@@ -231,10 +232,39 @@ exports.projectResults = catchAsync(async (req, res, next) => {
     return next(new AppError("Results are available after voting closes", 409));
   }
 
-  const [results, votingStats] = await Promise.all([
+  const [results, votingStats, votes] = await Promise.all([
     getVotingResults(project),
     getVotingStats(project._id),
+    Vote.find({ project: project._id })
+      .select("voterName batchType batchNumber selections createdAt votingSession")
+      .populate({ path: "selections.group", select: "groupNumber title" })
+      .populate({ path: "votingSession", select: "admittedAt" })
+      .sort({ createdAt: -1 }),
   ]);
+
+  const categoryNameById = new Map(
+    (project.projectShow.votingCategories || []).map((category) => [
+      category._id.toString(),
+      category.name,
+    ]),
+  );
+
+  // Individual votes, for manual post-event review — not shown as part of
+  // the aggregated tallies above.
+  const voteRows = votes.map((vote) => ({
+    id: vote._id,
+    voterName: vote.voterName || "—",
+    batchType: vote.batchType || null,
+    batchNumber: vote.batchNumber ?? null,
+    createdAt: vote.createdAt,
+    admittedAt: vote.votingSession?.admittedAt || null,
+    selections: vote.selections.map((selection) => ({
+      category: categoryNameById.get(selection.votingCategory?.toString()) || "Unknown category",
+      group: selection.group
+        ? `Group ${selection.group.groupNumber} · ${selection.group.title}`
+        : "Unknown group",
+    })),
+  }));
 
   res.status(200).render("shared/project-results", {
     pageTitle: `${project.batch} results`,
@@ -243,6 +273,7 @@ exports.projectResults = catchAsync(async (req, res, next) => {
     panelRole: req.user.role,
     results,
     votingStats,
+    voteRows,
   });
 });
 

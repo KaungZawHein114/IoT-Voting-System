@@ -5,6 +5,7 @@ const QRCode = require("qrcode");
 const Project = require("../models/projectModel");
 const QrAccessToken = require("../models/qrAccessTokenModel");
 const Vote = require("../models/voteModel");
+const VoteDeletionLog = require("../models/voteDeletionLogModel");
 const VotingSession = require("../models/votingSessionModel");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
@@ -23,6 +24,7 @@ const {
   randomToken,
   validCsrfToken,
 } = require("../services/votingTokenService");
+const { validateVoterInfo } = require("../services/voterInfoService");
 const {
   serializeCategory,
   serializeGroup,
@@ -93,6 +95,11 @@ const ensureControlAccess = (project, user) => {
     );
   }
 };
+
+// Exported for unit testing only — this is the same authorization gate used
+// by every other voting-control action (publish, reset votes, etc.), so
+// testing it here covers the delete-vote authorization behavior too.
+exports.ensureControlAccess = ensureControlAccess;
 
 const findProjectById = async (id) => {
   const project = await Project.findById(id).populate(
@@ -641,6 +648,14 @@ exports.submitVote = catchAsync(async (req, res, next) => {
     return next(new AppError("Voting is closed", 409));
   }
 
+  // Voter self-identification, for manual post-event review only — not a
+  // technical duplicate-vote guard, so it doesn't touch session/device
+  // logic above. Validated server-side regardless of what the frontend did.
+  const voterInfo = validateVoterInfo(req.body);
+  if (!voterInfo.valid) {
+    return next(new AppError(voterInfo.error, 400));
+  }
+
   const selections = req.body.selections;
   if (!Array.isArray(selections)) {
     return next(
@@ -686,6 +701,9 @@ exports.submitVote = catchAsync(async (req, res, next) => {
       project: project._id,
       votingSession: session._id,
       selections,
+      voterName: voterInfo.voterName,
+      batchType: voterInfo.batchType,
+      batchNumber: voterInfo.batchNumber,
     });
   } catch (error) {
     if (error.code === 11000) {
@@ -703,4 +721,42 @@ exports.submitVote = catchAsync(async (req, res, next) => {
     status: "success",
     data: { vote: { _id: vote._id, submittedAt: vote.createdAt } },
   });
+});
+
+// DELETE /api/v1/projects/:id/votes/:voteId
+// Manual post-event removal of a suspicious vote, for admins/the assigned
+// project manager. Leaves the voting session as-is (that browser's single
+// admission is already spent) — only the vote record is removed, with a
+// minimal audit trail of who removed it and what it contained.
+exports.deleteVote = catchAsync(async (req, res, next) => {
+  const project = await findProjectById(req.params.id);
+  ensureControlAccess(project, req.user);
+
+  const vote = await Vote.findOne({
+    _id: req.params.voteId,
+    project: project._id,
+  });
+  if (!vote) return next(new AppError("No vote found with that ID", 404));
+
+  // Snapshot before deleting (the document won't exist to read from after),
+  // but only write the audit log once the deletion has actually succeeded —
+  // logging first would risk a false "deleted" record if deleteOne() below
+  // were to fail.
+  const snapshot = {
+    voterName: vote.voterName,
+    batchType: vote.batchType,
+    batchNumber: vote.batchNumber,
+    selections: vote.selections,
+  };
+
+  await vote.deleteOne();
+
+  await VoteDeletionLog.create({
+    vote: vote._id,
+    project: project._id,
+    deletedBy: req.user._id,
+    snapshot,
+  });
+
+  res.status(204).json({ status: "success", data: null });
 });

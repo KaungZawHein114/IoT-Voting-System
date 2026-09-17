@@ -35,6 +35,50 @@
       <% } else { %>
         <div class="panel"><div class="empty-state"><img src="/icons/bar-chart-3.svg" alt="" /><div>No voting categories were configured.</div></div></div>
       <% } %>
+
+      <section class="panel" style="margin-top: 24px">
+        <div class="panel-header">
+          <div>
+            <h3>Individual votes</h3>
+            <span class="cell-secondary">For manual review — remove any vote that looks suspicious. This cannot be undone.</span>
+          </div>
+        </div>
+        <% if (voteRows.length) { %>
+          <div class="table-shell standalone" style="border:0">
+            <table>
+              <thead>
+                <tr><th>Voter</th><th>Batch</th><th>Selections</th><th>Submitted</th><th></th></tr>
+              </thead>
+              <tbody>
+                <% voteRows.forEach(vote => {
+                  const batchLabel = vote.batchType ? `${vote.batchType}-${vote.batchNumber}` : '—';
+                  const selectionsLabel = vote.selections.map(s => `${s.category}: ${s.group}`).join('; ');
+                  const confirmMessage = `Delete this vote?\n\nVoter: ${vote.voterName}\nBatch: ${batchLabel}\nSelections: ${selectionsLabel}\n\nThis action cannot be undone.`;
+                %>
+                  <tr>
+                    <td class="cell-primary"><%= vote.voterName %></td>
+                    <td><%= batchLabel %></td>
+                    <td class="cell-secondary"><%= selectionsLabel %></td>
+                    <td class="cell-secondary"><%= new Date(vote.createdAt).toLocaleString() %></td>
+                    <td>
+                      <button
+                        class="button danger"
+                        type="button"
+                        data-delete-endpoint="/api/v1/projects/<%= project._id %>/votes/<%= vote.id %>"
+                        data-confirm="<%= confirmMessage %>"
+                        data-confirm-title="Delete this vote?"
+                        data-redirect="<%= basePath %>/projects/<%= project._id %>/results"
+                      ><img src="/icons/trash-2.svg" alt="" /> Delete</button>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="empty-state"><img src="/icons/users.svg" alt="" /><div>No votes recorded yet.</div></div>
+        <% } %>
+      </section>
     </main>
   </div>
 </div>

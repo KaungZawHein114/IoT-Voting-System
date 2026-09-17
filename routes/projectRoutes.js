@@ -43,6 +43,11 @@ router.get(
   authController.restrictTo("ADMIN", "MANAGER"),
   votingController.getQrTokenStatus,
 );
+router.delete(
+  "/:id/votes/:voteId",
+  authController.restrictTo("ADMIN", "MANAGER"),
+  votingController.deleteVote,
+);
 
 router
   .route("/")

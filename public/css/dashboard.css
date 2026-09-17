@@ -897,6 +897,7 @@ dialog::backdrop {
 
 .confirmation-dialog .dialog-body p {
   margin: 0;
+  white-space: pre-line;
   color: var(--text-muted);
   line-height: 1.55;
 }
