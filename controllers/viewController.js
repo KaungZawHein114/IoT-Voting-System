@@ -12,6 +12,7 @@ const {
   resolveVotingState,
 } = require("../services/votingService");
 const { countDuplicateVoters } = require("../services/voteReviewService");
+const { formatMyanmarTime } = require("../utils/formatMyanmarTime");
 
 const OPEN_PROJECT_STATUSES = ["DRAFT", "ACTIVE"];
 
@@ -267,8 +268,8 @@ exports.projectResults = catchAsync(async (req, res, next) => {
     voterName: vote.voterName || "—",
     batchType: vote.batchType || null,
     batchNumber: vote.batchNumber ?? null,
-    createdAt: vote.createdAt,
-    admittedAt: vote.votingSession?.admittedAt || null,
+    submittedAt: formatMyanmarTime(vote.createdAt),
+    admittedAt: formatMyanmarTime(vote.votingSession?.admittedAt),
     duplicateCount: duplicateCounts[index],
     selections: vote.selections.map((selection) => ({
       category: categoryNameById.get(selection.votingCategory?.toString()) || "Unknown category",
