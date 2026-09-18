@@ -13,6 +13,7 @@ const {
 } = require("../services/votingService");
 const { countDuplicateVoters } = require("../services/voteReviewService");
 const { formatMyanmarTime } = require("../utils/formatMyanmarTime");
+const { BATCH_TYPES } = require("../utils/batchTypes");
 
 const OPEN_PROJECT_STATUSES = ["DRAFT", "ACTIVE"];
 
@@ -287,6 +288,7 @@ exports.projectResults = catchAsync(async (req, res, next) => {
     results,
     votingStats,
     voteRows,
+    batchTypes: BATCH_TYPES,
   });
 });
 

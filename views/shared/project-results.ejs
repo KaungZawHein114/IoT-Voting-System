@@ -44,8 +44,25 @@
           </div>
         </div>
         <% if (voteRows.length) { %>
-          <div class="table-shell standalone" style="border:0">
-            <table>
+          <div class="table-toolbar">
+            <label class="search-field search-field--type">
+              <img src="/icons/filter.svg" alt="" />
+              <select data-vote-filter-type aria-label="Filter by batch type">
+                <option value="">All batches</option>
+                <% batchTypes.forEach(type => { %>
+                  <option value="<%= type %>"><%= type %></option>
+                <% }) %>
+              </select>
+            </label>
+            <label class="search-field search-field--number">
+              <img src="/icons/hash.svg" alt="" />
+              <input type="number" min="1" step="1" placeholder="Batch number" data-vote-filter-number />
+            </label>
+            <button type="button" class="button" data-vote-filter-clear>Clear filter</button>
+            <span class="cell-secondary" data-vote-filter-count></span>
+          </div>
+          <div class="table-shell">
+            <table id="votes-table">
               <thead>
                 <tr><th>Voter</th><th>Batch</th><th>Selections</th><th>Submitted</th><th></th></tr>
               </thead>
@@ -56,7 +73,12 @@
                   const confirmMessage = `Delete this vote?\n\nVoter: ${vote.voterName}\nBatch: ${batchLabel}\nSelections: ${selectionsLabel}\n\nThis action cannot be undone.`;
                   const isDuplicate = vote.duplicateCount > 1;
                 %>
-                  <tr class="<%= isDuplicate ? 'vote-row--duplicate' : '' %>">
+                  <tr
+                    class="<%= isDuplicate ? 'vote-row--duplicate' : '' %>"
+                    data-vote-row
+                    data-batch-type="<%= vote.batchType || '' %>"
+                    data-batch-number="<%= vote.batchNumber ?? '' %>"
+                  >
                     <td class="cell-primary">
                       <%= vote.voterName %>
                       <% if (isDuplicate) { %>
@@ -78,6 +100,7 @@
                     </td>
                   </tr>
                 <% }) %>
+                <tr data-vote-filter-empty hidden><td colspan="5" class="empty-state">No votes match this filter.</td></tr>
               </tbody>
             </table>
           </div>

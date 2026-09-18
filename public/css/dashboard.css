@@ -443,10 +443,14 @@ img {
   opacity: 0.55;
 }
 
-.search-field input {
+.search-field input,
+.search-field select {
   width: 100%;
   padding-left: 36px;
 }
+
+.search-field--type { max-width: 220px; }
+.search-field--number { max-width: 160px; }
 
 .table-shell {
   width: 100%;
@@ -1173,8 +1177,11 @@ dialog::backdrop {
     width: 100%;
   }
 
-  .search-field {
+  .search-field,
+  .search-field--type,
+  .search-field--number {
     width: 100%;
+    max-width: none;
   }
 
   .login-main {

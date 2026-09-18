@@ -149,6 +149,49 @@ document.querySelectorAll("[data-table-search]").forEach((input) => {
   });
 });
 
+// Vote review filter (project-results.ejs): exact-match by batch type and/or
+// batch number, e.g. "HND-COMPUTING" + "55" shows only HND-COMPUTING-55.
+const voteTypeFilter = document.querySelector("[data-vote-filter-type]");
+if (voteTypeFilter) {
+  const voteNumberFilter = document.querySelector("[data-vote-filter-number]");
+  const voteClearButton = document.querySelector("[data-vote-filter-clear]");
+  const voteCountLabel = document.querySelector("[data-vote-filter-count]");
+  const voteEmptyRow = document.querySelector("[data-vote-filter-empty]");
+  const voteRows = Array.from(document.querySelectorAll("[data-vote-row]"));
+
+  const applyVoteFilter = () => {
+    const typeValue = voteTypeFilter.value;
+    const numberValue = voteNumberFilter.value.trim();
+    let visibleCount = 0;
+
+    voteRows.forEach((row) => {
+      const matchesType = !typeValue || row.dataset.batchType === typeValue;
+      const matchesNumber = !numberValue || row.dataset.batchNumber === numberValue;
+      const visible = matchesType && matchesNumber;
+      row.hidden = !visible;
+      if (visible) visibleCount += 1;
+    });
+
+    if (voteCountLabel) {
+      voteCountLabel.textContent =
+        typeValue || numberValue
+          ? `Showing ${visibleCount} of ${voteRows.length} votes`
+          : "";
+    }
+    if (voteEmptyRow) {
+      voteEmptyRow.hidden = visibleCount !== 0 || voteRows.length === 0;
+    }
+  };
+
+  voteTypeFilter.addEventListener("change", applyVoteFilter);
+  voteNumberFilter.addEventListener("input", applyVoteFilter);
+  voteClearButton?.addEventListener("click", () => {
+    voteTypeFilter.value = "";
+    voteNumberFilter.value = "";
+    applyVoteFilter();
+  });
+}
+
 const formJson = (form) => {
   const body = {};
   new FormData(form).forEach((value, key) => {
